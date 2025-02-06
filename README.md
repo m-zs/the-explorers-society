@@ -33,6 +33,12 @@ $ docker compose
   - Password: `$POSTGRES_PASSWORD`
 - Save
 
+5. Run migrations
+
+```bash
+pnpm run knex migrate:latest
+```
+
 ## Compile and run the project
 
 ```bash
