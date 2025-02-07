@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   cache-and-install:
     runs-on: ubuntu-latest
+    environment:
+      name: test
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,6 +41,8 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    environment:
+      name: test
     needs: cache-and-install
     steps:
       - name: Checkout repository
@@ -67,6 +72,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    environment:
+      name: test
     needs: cache-and-install
     steps:
       - name: Checkout repository
@@ -84,19 +91,31 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm test
+      - name: Run tests
+        run: pnpm test
 
   test-e2e:
     runs-on: ubuntu-latest
-    needs: cache-and-install
+    environment:
+      name: test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -113,12 +132,19 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm test:e2e
+      - name: Set environment variables
+        run: |
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: pnpm knex migrate:latest
+
+      - name: Run tests
+        run: pnpm test:e2e

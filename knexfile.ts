@@ -7,6 +7,7 @@ require('dotenv').config({
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'postgresql',
+    debug: true,
     connection: {
       database: process.env.POSTGRES_DB,
       user: process.env.POSTGRES_USER,
@@ -18,6 +19,24 @@ const config: { [key: string]: Knex.Config } = {
     },
     migrations: {
       tableName: 'migrations',
+      directory: './migrations',
+    },
+  },
+  test: {
+    client: 'postgresql',
+    debug: false,
+    connection: {
+      database: process.env.POSTGRES_DB,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+    },
+    pool: {
+      min: 2,
+      max: 10,
+    },
+    migrations: {
+      tableName: 'migrations',
+      directory: './migrations',
     },
   },
 };
