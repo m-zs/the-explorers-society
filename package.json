@@ -32,6 +32,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/microservices": "^11.0.8",
     "@nestjs/platform-express": "^11.0.1",
     "dotenv": "^16.4.7",
     "knex": "^3.1.0",
