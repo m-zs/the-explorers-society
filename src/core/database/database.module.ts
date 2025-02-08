@@ -6,21 +6,22 @@ import {
   OnModuleDestroy,
   Provider,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import Knex, { Knex as KnexType } from 'knex';
 import { knexSnakeCaseMappers, Model } from 'objection';
 
+import { TenantModel } from '@modules/tenants/tenant.model';
+
 const logger = new Logger('DatabaseModule');
 
-const models = [];
-
-const modelProviders: Provider[] = models.map((model) => ({
-  provide: model,
-  useValue: model,
-}));
+const models: Provider[] = [
+  {
+    provide: 'TenantModel',
+    useValue: TenantModel,
+  },
+];
 
 const providers: Provider[] = [
-  ...modelProviders,
   {
     provide: 'KnexConnection',
     inject: [ConfigService],
@@ -44,10 +45,12 @@ const providers: Provider[] = [
       return knex;
     },
   },
+  ...models,
 ];
 
 @Global()
 @Module({
+  imports: [ConfigModule.forRoot()],
   providers: [...providers],
   exports: [...providers],
 })

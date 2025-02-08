@@ -20,7 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.ts",
     "prepare": "husky",
-    "knex": "knex"
+    "knex": "knex",
+    "seed:tenants": "ts-node -r tsconfig-paths/register src/modules/tenants/cli/tenants.cli.ts tenants-seed"
   },
   "lint-staged": {
     "src/**/*.ts": [
@@ -35,8 +36,10 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/microservices": "^11.0.8",
     "@nestjs/platform-express": "^11.0.1",
+    "class-validator": "^0.14.1",
     "dotenv": "^16.4.7",
     "knex": "^3.1.0",
+    "nest-commander": "^3.16.0",
     "objection": "^3.1.5",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
@@ -48,7 +51,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@faker-js/faker": "^9.4.0",
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.2",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
