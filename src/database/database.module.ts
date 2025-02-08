@@ -1,6 +1,13 @@
-import { Global, Logger, Module, Provider } from '@nestjs/common';
+import {
+  Global,
+  Inject,
+  Logger,
+  Module,
+  OnModuleDestroy,
+  Provider,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Knex from 'knex';
+import Knex, { Knex as KnexType } from 'knex';
 import { knexSnakeCaseMappers, Model } from 'objection';
 
 const logger = new Logger('DatabaseModule');
@@ -44,4 +51,13 @@ const providers: Provider[] = [
   providers: [...providers],
   exports: [...providers],
 })
-export class DatabaseModule {}
+export class DatabaseModule implements OnModuleDestroy {
+  constructor(@Inject('KnexConnection') private knex: KnexType) {}
+
+  async onModuleDestroy() {
+    if (this.knex) {
+      await this.knex.destroy();
+      logger.log('✅ Database connection closed successfully');
+    }
+  }
+}
