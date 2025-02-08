@@ -21,6 +21,9 @@ const config: { [key: string]: Knex.Config } = {
       tableName: 'migrations',
       directory: './migrations',
     },
+    seeds: {
+      directory: './seeds',
+    },
   },
   test: {
     client: 'postgresql',
@@ -37,6 +40,9 @@ const config: { [key: string]: Knex.Config } = {
     migrations: {
       tableName: 'migrations',
       directory: './migrations',
+    },
+    seeds: {
+      directory: './seeds',
     },
   },
 };
