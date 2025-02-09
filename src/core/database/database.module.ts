@@ -11,6 +11,7 @@ import Knex, { Knex as KnexType } from 'knex';
 import { knexSnakeCaseMappers, Model } from 'objection';
 
 import { TenantModel } from '@modules/tenants/models/tenant.model';
+import { UserModel } from '@modules/users/models/user.model';
 
 const logger = new Logger('DatabaseModule');
 
@@ -18,6 +19,10 @@ const models: Provider[] = [
   {
     provide: 'TenantModel',
     useValue: TenantModel,
+  },
+  {
+    provide: 'UserModel',
+    useValue: UserModel,
   },
 ];
 
