@@ -3,7 +3,7 @@ import { ModelClass } from 'objection';
 
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { TenantModel } from './tenant.model';
+import { TenantModel } from './models/tenant.model';
 
 @Injectable()
 export class TenantRepository {

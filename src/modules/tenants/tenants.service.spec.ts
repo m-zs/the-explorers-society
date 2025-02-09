@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { TenantModel } from './tenant.model';
+import { TenantModel } from './models/tenant.model';
 import { TenantRepository } from './tenants.repository';
 import { TenantsService } from './tenants.service';
 

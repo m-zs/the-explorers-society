@@ -10,7 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import Knex, { Knex as KnexType } from 'knex';
 import { knexSnakeCaseMappers, Model } from 'objection';
 
-import { TenantModel } from '@modules/tenants/tenant.model';
+import { TenantModel } from '@modules/tenants/models/tenant.model';
 
 const logger = new Logger('DatabaseModule');
 
