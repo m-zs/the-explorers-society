@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from '@core/database/database.module';
 import { LogService } from '@core/logging/log.service';
 import { TenantsModule } from '@modules/tenants/tenants.module';
+import { UsersModule } from '@modules/users/users.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,6 +18,7 @@ import { AppService } from './app.service';
 
     DatabaseModule,
     TenantsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService, LogService],
