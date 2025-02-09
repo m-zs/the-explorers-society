@@ -1,4 +1,4 @@
-import { Logger as CoreLogger } from '@nestjs/common';
+import { Logger as CoreLogger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { LogService } from '@core/logging/log.service';
@@ -10,6 +10,13 @@ async function bootstrap() {
 
   const logger = app.get(LogService);
   CoreLogger.overrideLogger(logger);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
