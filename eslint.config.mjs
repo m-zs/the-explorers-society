@@ -72,6 +72,7 @@ export default tseslint.config(
       'import/no-unresolved': 'error',
       'import/no-duplicates': 'error',
       'import/no-cycle': 'warn',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 );
