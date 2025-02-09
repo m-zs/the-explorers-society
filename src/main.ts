@@ -2,6 +2,7 @@ import { Logger as CoreLogger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { LogService } from '@core/logging/log.service';
+import { exceptionFactory } from '@core/validation/exception.factory';
 
 import { AppModule } from './app.module';
 
@@ -13,8 +14,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
       transform: true,
+      whitelist: true,
+      exceptionFactory,
     }),
   );
 
