@@ -3,13 +3,14 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
+  Put,
   Delete,
 } from '@nestjs/common';
 
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { TenantModel } from './tenant.model';
 import { TenantsService } from './tenants.service';
 
 @Controller('tenants')
@@ -17,27 +18,30 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Post()
-  create(@Body() createTenantDto: CreateTenantDto) {
-    return this.tenantsService.create(createTenantDto);
+  async create(@Body() createTenantDto: CreateTenantDto): Promise<TenantModel> {
+    return await this.tenantsService.create(createTenantDto);
   }
 
   @Get()
-  findAll() {
-    return this.tenantsService.findAll();
+  async findAll(): Promise<TenantModel[]> {
+    return await this.tenantsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tenantsService.findOne(+id);
+  async findOne(@Param('id') id: number): Promise<TenantModel | undefined> {
+    return await this.tenantsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
-    return this.tenantsService.update(+id, updateTenantDto);
+  @Put(':id')
+  async update(
+    @Param('id') id: number,
+    @Body() updateTenantDto: UpdateTenantDto,
+  ): Promise<TenantModel | undefined> {
+    return await this.tenantsService.update(id, updateTenantDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tenantsService.remove(+id);
+  async remove(@Param('id') id: number): Promise<number> {
+    return await this.tenantsService.remove(id);
   }
 }
