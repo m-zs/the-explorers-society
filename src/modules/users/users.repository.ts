@@ -9,45 +9,70 @@ import { UserModel } from './models/user.model';
 export class UserRepository {
   constructor(@Inject('UserModel') private modelClass: ModelClass<UserModel>) {}
 
-  async createUser(data: CreateUserDto): Promise<UserModel> {
-    return this.modelClass.query().insertAndFetch(data);
+  async createUser(data: CreateUserDto): Promise<Omit<UserModel, 'password'>> {
+    return this.modelClass
+      .query()
+      .insertAndFetch(data)
+      .select('id', 'name', 'email');
   }
 
-  async createUsers(data: CreateUserDto[]): Promise<UserModel[]> {
-    return this.modelClass.query().insert(data).returning('*');
+  async createUsers(
+    data: CreateUserDto[],
+  ): Promise<Omit<UserModel, 'password'>[]> {
+    return this.modelClass.query().insert(data).select('id', 'name', 'email');
   }
 
-  async getAllUsers(): Promise<UserModel[]> {
-    return this.modelClass.query();
+  async getAllUsers(): Promise<Omit<UserModel, 'password'>[]> {
+    return this.modelClass.query().select('id', 'name', 'email');
   }
 
-  async getUserById(id: number): Promise<UserModel | undefined> {
-    return this.modelClass.query().findById(id);
+  async getUserById(
+    id: number,
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
+    return this.modelClass.query().findById(id).select('id', 'name', 'email');
   }
 
   async updateUser(
     id: number,
     data: UpdateUserDto,
-  ): Promise<UserModel | undefined> {
-    return this.modelClass.query().patchAndFetchById(id, data);
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
+    return this.modelClass
+      .query()
+      .patchAndFetchById(id, data)
+      .select('id', 'name', 'email');
   }
 
   async removeUser(id: number): Promise<number> {
     return this.modelClass.query().deleteById(id);
   }
 
-  async getUserWithTenants(id: number): Promise<UserModel | undefined> {
-    return this.modelClass.query().findById(id).withGraphFetched('tenants');
-  }
-
-  async getUserWithRoles(id: number): Promise<UserModel | undefined> {
-    return this.modelClass.query().findById(id).withGraphFetched('roles');
-  }
-
-  async getUserWithTenantsAndRoles(id: number): Promise<UserModel | undefined> {
+  async getUserWithTenants(
+    id: number,
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return this.modelClass
       .query()
       .findById(id)
+      .select('id', 'name', 'email')
+      .withGraphFetched('tenants');
+  }
+
+  async getUserWithRoles(
+    id: number,
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
+    return this.modelClass
+      .query()
+      .findById(id)
+      .select('id', 'name', 'email')
+      .withGraphFetched('roles');
+  }
+
+  async getUserWithTenantsAndRoles(
+    id: number,
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
+    return this.modelClass
+      .query()
+      .findById(id)
+      .select('id', 'name', 'email')
       .withGraphFetched('[tenants, roles]');
   }
 }

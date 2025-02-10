@@ -18,17 +18,21 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<UserModel> {
+  async create(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<Omit<UserModel, 'password'>> {
     return await this.usersService.create(createUserDto);
   }
 
   @Get()
-  async findAll(): Promise<UserModel[]> {
+  async findAll(): Promise<Omit<UserModel, 'password'>[]> {
     return await this.usersService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<UserModel | undefined> {
+  async findOne(
+    @Param('id') id: number,
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return await this.usersService.findOne(id);
   }
 
@@ -36,7 +40,7 @@ export class UsersController {
   async update(
     @Param('id') id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserModel | undefined> {
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return await this.usersService.update(id, updateUserDto);
   }
 
@@ -48,21 +52,21 @@ export class UsersController {
   @Get(':id/tenants')
   async getUserWithTenants(
     @Param('id') id: number,
-  ): Promise<UserModel | undefined> {
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return await this.usersService.getUserWithTenants(id);
   }
 
   @Get(':id/roles')
   async getUserWithRoles(
     @Param('id') id: number,
-  ): Promise<UserModel | undefined> {
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return await this.usersService.getUserWithRoles(id);
   }
 
   @Get(':id/tenants-roles')
   async getUserWithTenantsAndRoles(
     @Param('id') id: number,
-  ): Promise<UserModel | undefined> {
+  ): Promise<Omit<UserModel, 'password'> | undefined> {
     return await this.usersService.getUserWithTenantsAndRoles(id);
   }
 }
