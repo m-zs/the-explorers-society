@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { DatabaseModule } from '@core/database/database.module';
 import { LogService } from '@core/logging/log.service';
+import { PasswordService } from '@core/services/password/password.service';
 import { TenantsModule } from '@modules/tenants/tenants.module';
 import { UsersModule } from '@modules/users/users.module';
 
@@ -21,6 +22,7 @@ import { AppService } from './app.service';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, LogService],
+  providers: [AppService, LogService, PasswordService],
+  exports: [PasswordService],
 })
 export class AppModule {}
