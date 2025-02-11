@@ -21,7 +21,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.ts",
     "prepare": "husky",
     "knex": "knex",
-    "seed:tenants": "ts-node -r tsconfig-paths/register src/modules/tenants/cli/tenants.cli.ts tenants-seed"
+    "seed:tenants": "ts-node -r tsconfig-paths/register src/modules/tenants/cli/tenants.cli.ts tenants-seed",
+    "seed:users": "ts-node -r tsconfig-paths/register src/modules/users/cli/users.cli.ts users-seed"
   },
   "lint-staged": {
     "src/**/*.ts": [
