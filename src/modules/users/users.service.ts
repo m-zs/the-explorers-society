@@ -42,13 +42,15 @@ export class UsersService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<Omit<UserModel, 'password'> | undefined> {
-    if (updateUserDto.password) {
-      updateUserDto.password = await this.passwordService.hashPassword(
-        updateUserDto.password,
-      );
+    let password = updateUserDto.password;
+    if (password) {
+      password = await this.passwordService.hashPassword(password);
     }
 
-    const user = await this.userRepository.updateUser(id, updateUserDto);
+    const user = await this.userRepository.updateUser(id, {
+      ...updateUserDto,
+      password,
+    });
     if (!user) return undefined;
 
     return user;
