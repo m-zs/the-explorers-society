@@ -25,6 +25,8 @@ export async function up(knex: Knex): Promise<void> {
       .inTable('roles')
       .onDelete('CASCADE');
     table.timestamps(true, true);
+
+    table.unique(['tenant_id', 'user_id', 'role_id']);
   });
 }
 
