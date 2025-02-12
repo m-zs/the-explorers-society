@@ -1,6 +1,7 @@
 import { Logger as CoreLogger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-exception.filter';
 import { LogService } from '@core/logging/log.service';
 import { setupOpenApi } from '@core/open-api/setup-open-api';
 import { exceptionFactory } from '@core/validation/exception.factory';
@@ -25,6 +26,8 @@ async function bootstrap() {
 
   // open API
   setupOpenApi(app);
+
+  app.useGlobalFilters(new UniqueViolationExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }
