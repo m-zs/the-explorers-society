@@ -123,7 +123,7 @@ describe('UsersService', () => {
       });
     });
 
-    it.skip('should update user without hashing if no password is provided', async () => {
+    it('should update user without hashing if no password is provided', async () => {
       const updateUserDto: UpdateUserDto = {
         email: faker.internet.email(),
         name: faker.person.fullName(),
