@@ -1,7 +1,6 @@
 import { BaseModel } from '@core/database/models/base.model';
+import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
-
-import { RoleModel } from './role.model';
 
 export class UserModel extends BaseModel {
   static tableName = 'users';

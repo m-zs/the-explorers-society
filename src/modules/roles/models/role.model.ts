@@ -1,7 +1,6 @@
 import { BaseModel } from '@core/database/models/base.model';
-
-import { RoleType } from '../role.enum';
-import { UserModel } from './user.model';
+import { UserModel } from '@modules/users/models/user.model';
+import { RoleType } from '@modules/users/role.enum';
 
 export class RoleModel extends BaseModel {
   static tableName = 'roles';
