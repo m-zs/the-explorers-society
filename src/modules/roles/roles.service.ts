@@ -34,7 +34,7 @@ export class RolesService {
     return this.roleRepository.updateRole(id, updateRoleDto);
   }
 
-  async remove(id: number): Promise<number> {
+  async remove(id: number): Promise<number | undefined> {
     return this.roleRepository.removeRole(id);
   }
 

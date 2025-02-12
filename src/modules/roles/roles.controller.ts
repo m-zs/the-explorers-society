@@ -16,7 +16,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleModel } from './models/role.model';
 import { RolesService } from './roles.service';
 
-@ApiTags('Roles') // Group routes under "Roles" in Swagger UI
+@ApiTags('Roles')
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
@@ -82,7 +82,7 @@ export class RolesController {
   @ApiParam({ name: 'id', type: Number, description: 'Role ID' })
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Role deleted' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async remove(@Param('id') id: number): Promise<number> {
+  async remove(@Param('id') id: number): Promise<number | undefined> {
     return this.rolesService.remove(id);
   }
 
