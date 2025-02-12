@@ -1,19 +1,125 @@
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { RoleType } from '@modules/users/role.enum';
+
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { RoleModel } from './models/role.model';
+import { RoleRepository } from './roles.repository';
 import { RolesService } from './roles.service';
 
+const generateMockRole = (id?: number): RoleModel => {
+  const role = new RoleModel();
+
+  role.id = id || faker.number.int({ min: 1, max: 1000 });
+  role.name = faker.word.noun();
+  role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
+
+  return role;
+};
+
 describe('RolesService', () => {
-  let service: RolesService;
+  let rolesService: RolesService;
+  let roleRepository: RoleRepository;
+
+  const mockRole = generateMockRole();
+  const mockRoles = Array.from({ length: 5 }, generateMockRole);
+
+  const mockRoleRepository = {
+    createRole: jest.fn().mockResolvedValue(mockRole),
+    getAllRoles: jest.fn().mockResolvedValue(mockRoles),
+    getRoleById: jest.fn().mockResolvedValue(mockRole),
+    updateRole: jest.fn().mockResolvedValue(mockRole),
+    removeRole: jest.fn().mockResolvedValue(1),
+    getUsersWithRoleId: jest.fn().mockResolvedValue(mockRole),
+  };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RolesService],
+      providers: [
+        { provide: RoleRepository, useValue: mockRoleRepository },
+        RolesService,
+      ],
     }).compile();
 
-    service = module.get<RolesService>(RolesService);
+    rolesService = module.get<RolesService>(RolesService);
+    roleRepository = module.get<RoleRepository>(RoleRepository);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  describe('create', () => {
+    it('should create a new role', async () => {
+      const createRoleDto: CreateRoleDto = {
+        name: faker.word.noun(),
+        type: faker.helpers.arrayElement(['Global', 'Tenant']),
+      };
+
+      const result = await rolesService.create(createRoleDto);
+      expect(result).toEqual(mockRole);
+      expect(roleRepository.createRole).toHaveBeenCalledWith(createRoleDto);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return all roles', async () => {
+      const result = await rolesService.findAll();
+      expect(result).toEqual(mockRoles);
+      expect(roleRepository.getAllRoles).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a single role by ID', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+
+      jest.spyOn(roleRepository, 'getRoleById').mockResolvedValueOnce(mockRole);
+
+      const result = await rolesService.findOne(id);
+      expect(result).toEqual(mockRole);
+      expect(roleRepository.getRoleById).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('update', () => {
+    it('should update a role', async () => {
+      const updateRoleDto: UpdateRoleDto = {
+        name: faker.word.noun(),
+        type: faker.helpers.arrayElement(['Global', 'Tenant']),
+      };
+      const id = faker.number.int({ min: 1, max: 1000 });
+
+      jest.spyOn(roleRepository, 'updateRole').mockResolvedValueOnce(mockRole);
+
+      const result = await rolesService.update(id, updateRoleDto);
+      expect(result).toEqual(mockRole);
+      expect(roleRepository.updateRole).toHaveBeenCalledWith(id, updateRoleDto);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove a role and return the deleted role ID', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+
+      jest.spyOn(roleRepository, 'removeRole').mockResolvedValueOnce(id);
+
+      const result = await rolesService.remove(id);
+      expect(result).toBe(id);
+      expect(roleRepository.removeRole).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('getUsersWithRoleId', () => {
+    it('should return users associated with the role', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+
+      jest
+        .spyOn(roleRepository, 'getUsersWithRoleId')
+        .mockResolvedValueOnce(mockRole);
+
+      const result = await rolesService.getUsersWithRoleId(id);
+      expect(result).toEqual(mockRole);
+      expect(roleRepository.getUsersWithRoleId).toHaveBeenCalledWith(id);
+    });
   });
 });
