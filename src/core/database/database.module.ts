@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import Knex, { Knex as KnexType } from 'knex';
 import { knexSnakeCaseMappers, Model } from 'objection';
 
+import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
 import { UserModel } from '@modules/users/models/user.model';
 
@@ -23,6 +24,10 @@ const models: Provider[] = [
   {
     provide: 'UserModel',
     useValue: UserModel,
+  },
+  {
+    provide: 'RoleModel',
+    useValue: RoleModel,
   },
 ];
 
