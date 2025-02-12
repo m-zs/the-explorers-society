@@ -50,7 +50,7 @@ describe('RolesController', () => {
     it('should create a new role', async () => {
       const createRoleDto: CreateRoleDto = {
         name: faker.lorem.word(),
-        description: faker.lorem.sentence(),
+        type: RoleType.GLOBAL,
       };
 
       const result = await controller.create(createRoleDto);
@@ -96,7 +96,6 @@ describe('RolesController', () => {
     it('should update a role and return the updated role', async () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.lorem.word(),
-        description: faker.lorem.sentence(),
       };
       const id = faker.number.int({ min: 1, max: 1000 });
       const expectedResult = generateMockRole(id);
@@ -111,7 +110,6 @@ describe('RolesController', () => {
     it('should return undefined if role is not found', async () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.lorem.word(),
-        description: faker.lorem.sentence(),
       };
       const id = faker.number.int({ min: 1, max: 1000 });
 
