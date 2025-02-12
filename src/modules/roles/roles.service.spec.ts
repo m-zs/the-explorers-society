@@ -52,7 +52,7 @@ describe('RolesService', () => {
     it('should create a new role', async () => {
       const createRoleDto: CreateRoleDto = {
         name: faker.word.noun(),
-        type: faker.helpers.arrayElement(['Global', 'Tenant']),
+        type: faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]),
       };
 
       const result = await rolesService.create(createRoleDto);
@@ -85,7 +85,7 @@ describe('RolesService', () => {
     it('should update a role', async () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.word.noun(),
-        type: faker.helpers.arrayElement(['Global', 'Tenant']),
+        type: faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]),
       };
       const id = faker.number.int({ min: 1, max: 1000 });
 
