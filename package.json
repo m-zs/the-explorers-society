@@ -22,7 +22,8 @@
     "prepare": "husky",
     "knex": "knex",
     "seed:tenants": "ts-node -r tsconfig-paths/register src/modules/tenants/cli/tenants.cli.ts tenants-seed",
-    "seed:users": "ts-node -r tsconfig-paths/register src/modules/users/cli/users.cli.ts users-seed"
+    "seed:users": "ts-node -r tsconfig-paths/register src/modules/users/cli/users.cli.ts users-seed",
+    "seed:roles": "ts-node -r tsconfig-paths/register src/modules/roles/cli/roles.cli.ts roles-seed"
   },
   "lint-staged": {
     "src/**/*.ts": [
