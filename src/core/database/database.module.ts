@@ -60,7 +60,7 @@ const providers: Provider[] = [
 
 @Global()
 @Module({
-  imports: [ConfigModule.forRoot()],
+  imports: [ConfigModule],
   providers: [...providers],
   exports: [...providers],
 })
