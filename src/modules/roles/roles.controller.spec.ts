@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { RoleType } from '@modules/users/role.enum';
@@ -11,11 +12,9 @@ import { RolesService } from './roles.service';
 
 const generateMockRole = (id?: number): RoleModel => {
   const role = new RoleModel();
-
   role.id = id || faker.number.int({ min: 1, max: 1000 });
   role.name = faker.word.noun();
   role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
-
   return role;
 };
 
@@ -81,14 +80,17 @@ describe('RolesController', () => {
       expect(rolesService.findOne).toHaveBeenCalledWith(id);
     });
 
-    it('should return undefined if role is not found', async () => {
+    it('should throw NotFoundException if role is not found', async () => {
       const id = faker.number.int({ min: 1, max: 1000 });
 
-      jest.spyOn(rolesService, 'findOne').mockResolvedValueOnce(undefined);
-
-      const result = await controller.findOne(id);
-      expect(result).toBeUndefined();
-      expect(rolesService.findOne).toHaveBeenCalledWith(id);
+      try {
+        await controller.findOne(id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        if (!(error instanceof NotFoundException)) return;
+        expect(error.getStatus()).toBe(404);
+        expect(error.message).toBe('Role not found');
+      }
     });
   });
 
@@ -107,17 +109,20 @@ describe('RolesController', () => {
       expect(rolesService.update).toHaveBeenCalledWith(id, updateRoleDto);
     });
 
-    it('should return undefined if role is not found', async () => {
+    it('should throw NotFoundException if role is not found', async () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.lorem.word(),
       };
       const id = faker.number.int({ min: 1, max: 1000 });
 
-      jest.spyOn(rolesService, 'update').mockResolvedValueOnce(undefined);
-
-      const result = await controller.update(id, updateRoleDto);
-      expect(result).toBeUndefined();
-      expect(rolesService.update).toHaveBeenCalledWith(id, updateRoleDto);
+      try {
+        await controller.update(id, updateRoleDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        if (!(error instanceof NotFoundException)) return;
+        expect(error.getStatus()).toBe(404);
+        expect(error.message).toBe('Role not found');
+      }
     });
   });
 
@@ -132,14 +137,17 @@ describe('RolesController', () => {
       expect(rolesService.remove).toHaveBeenCalledWith(id);
     });
 
-    it('should return undefined if role is not found', async () => {
+    it('should throw NotFoundException if role is not found', async () => {
       const id = faker.number.int({ min: 1, max: 1000 });
 
-      jest.spyOn(rolesService, 'remove').mockResolvedValueOnce(undefined);
-
-      const result = await controller.remove(id);
-      expect(result).toBeUndefined();
-      expect(rolesService.remove).toHaveBeenCalledWith(id);
+      try {
+        await controller.remove(id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        if (!(error instanceof NotFoundException)) return;
+        expect(error.getStatus()).toBe(404);
+        expect(error.message).toBe('Role not found');
+      }
     });
   });
 
@@ -156,16 +164,17 @@ describe('RolesController', () => {
       expect(rolesService.getUsersWithRoleId).toHaveBeenCalledWith(id);
     });
 
-    it('should return undefined if role is not found', async () => {
+    it('should throw NotFoundException if role is not found', async () => {
       const id = faker.number.int({ min: 1, max: 1000 });
 
-      jest
-        .spyOn(rolesService, 'getUsersWithRoleId')
-        .mockResolvedValueOnce(undefined);
-
-      const result = await controller.getUsersWithRoleId(id);
-      expect(result).toBeUndefined();
-      expect(rolesService.getUsersWithRoleId).toHaveBeenCalledWith(id);
+      try {
+        await controller.getUsersWithRoleId(id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        if (!(error instanceof NotFoundException)) return;
+        expect(error.getStatus()).toBe(404);
+        expect(error.message).toBe('Role not found');
+      }
     });
   });
 });

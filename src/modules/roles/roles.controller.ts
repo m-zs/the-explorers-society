@@ -30,7 +30,7 @@ export class RolesController {
     type: RoleModel,
   })
   async create(@Body() createRoleDto: CreateRoleDto): Promise<RoleModel> {
-    return this.rolesService.create(createRoleDto);
+    return await this.rolesService.create(createRoleDto);
   }
 
   @Get()
@@ -42,7 +42,7 @@ export class RolesController {
     type: [RoleModel],
   })
   async findAll(): Promise<RoleModel[]> {
-    return this.rolesService.findAll();
+    return await this.rolesService.findAll();
   }
 
   @Get(':id')
@@ -55,8 +55,8 @@ export class RolesController {
     type: RoleModel,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async findOne(@Param('id') id: number): Promise<RoleModel | undefined> {
-    return this.rolesService.findOne(id);
+  async findOne(@Param('id') id: number): Promise<RoleModel> {
+    return await this.rolesService.findOne(id);
   }
 
   @Patch(':id')
@@ -72,8 +72,8 @@ export class RolesController {
   async update(
     @Param('id') id: number,
     @Body() updateRoleDto: UpdateRoleDto,
-  ): Promise<RoleModel | undefined> {
-    return this.rolesService.update(id, updateRoleDto);
+  ): Promise<RoleModel> {
+    return await this.rolesService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
@@ -82,8 +82,8 @@ export class RolesController {
   @ApiParam({ name: 'id', type: Number, description: 'Role ID' })
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Role deleted' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async remove(@Param('id') id: number): Promise<number | undefined> {
-    return this.rolesService.remove(id);
+  async remove(@Param('id') id: number): Promise<number> {
+    return await this.rolesService.remove(id);
   }
 
   @Get(':id/users')
@@ -96,9 +96,7 @@ export class RolesController {
     type: RoleModel,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async getUsersWithRoleId(
-    @Param('id') id: number,
-  ): Promise<RoleModel | undefined> {
-    return this.rolesService.getUsersWithRoleId(id);
+  async getUsersWithRoleId(@Param('id') id: number): Promise<RoleModel> {
+    return await this.rolesService.getUsersWithRoleId(id);
   }
 }

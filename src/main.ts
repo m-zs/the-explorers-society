@@ -1,10 +1,8 @@
-import { Logger as CoreLogger, ValidationPipe } from '@nestjs/common';
+import { Logger as CoreLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
-import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-exception.filter';
 import { LogService } from '@core/logging/log.service';
 import { setupOpenApi } from '@core/open-api/setup-open-api';
-import { exceptionFactory } from '@core/validation/exception.factory';
 
 import { AppModule } from './app.module';
 
@@ -15,19 +13,8 @@ async function bootstrap() {
   const logger = app.get(LogService);
   CoreLogger.overrideLogger(logger);
 
-  // global validators
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      exceptionFactory,
-    }),
-  );
-
   // open API
   setupOpenApi(app);
-
-  app.useGlobalFilters(new UniqueViolationExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }
