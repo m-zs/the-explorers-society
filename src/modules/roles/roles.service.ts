@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -23,22 +23,35 @@ export class RolesService {
     return this.roleRepository.getAllRoles();
   }
 
-  async findOne(id: number): Promise<RoleModel | undefined> {
-    return this.roleRepository.getRoleById(id);
+  async findOne(id: number): Promise<RoleModel> {
+    const role = await this.roleRepository.getRoleById(id);
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+    return role;
   }
 
-  async update(
-    id: number,
-    updateRoleDto: UpdateRoleDto,
-  ): Promise<RoleModel | undefined> {
-    return this.roleRepository.updateRole(id, updateRoleDto);
+  async update(id: number, updateRoleDto: UpdateRoleDto): Promise<RoleModel> {
+    const role = await this.roleRepository.updateRole(id, updateRoleDto);
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+    return role;
   }
 
-  async remove(id: number): Promise<number | undefined> {
-    return this.roleRepository.removeRole(id);
+  async remove(id: number): Promise<number> {
+    const deleted = await this.roleRepository.removeRole(id);
+    if (!deleted) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+    return deleted;
   }
 
-  async getUsersWithRoleId(id: number): Promise<RoleModel | undefined> {
-    return this.roleRepository.getUsersWithRoleId(id);
+  async getUsersWithRoleId(id: number): Promise<RoleModel> {
+    const role = await this.roleRepository.getUsersWithRoleId(id);
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+    return role;
   }
 }

@@ -1,7 +1,8 @@
 import type { Knex } from 'knex';
+import { env } from './env';
 
 require('dotenv').config({
-  path: '.env',
+  path: env,
 });
 
 const config: { [key: string]: Knex.Config } = {
@@ -12,6 +13,7 @@ const config: { [key: string]: Knex.Config } = {
       database: process.env.POSTGRES_DB,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
+      port: Number(process.env.POSTGRES_PORT),
     },
     pool: {
       min: 2,
@@ -32,6 +34,7 @@ const config: { [key: string]: Knex.Config } = {
       database: process.env.POSTGRES_DB,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
+      port: Number(process.env.POSTGRES_PORT),
     },
     pool: {
       min: 2,
