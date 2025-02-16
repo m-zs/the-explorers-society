@@ -21,6 +21,7 @@
     "paths": {
       "@core/*": ["core/*"],
       "@modules/*": ["modules/*"],
+      "@utils/*": ["utils/*"],
       "@/*": ["*"]
     }
   }
