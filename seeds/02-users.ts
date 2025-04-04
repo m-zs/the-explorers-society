@@ -9,8 +9,13 @@ export async function seed(knex: Knex): Promise<void> {
 
   const passwordService = new PasswordService(new ConfigService());
 
-  const users = await Promise.all(
-    Array.from({ length: 5 }, async () => {
+  const users = await Promise.all([
+    {
+      name: 'admin',
+      password: await passwordService.hashPassword('admin'),
+      email: 'admin@admin.com',
+    },
+    ...Array.from({ length: 5 }, async () => {
       const name = faker.string.uuid();
       const password = await passwordService.hashPassword(name);
       return {
@@ -19,9 +24,9 @@ export async function seed(knex: Knex): Promise<void> {
         password,
       };
     }),
-  );
+  ]);
 
   await knex('users').insert(users);
 
-  console.log('Tenants seeded successfully');
+  console.log('Users seeded successfully');
 }
