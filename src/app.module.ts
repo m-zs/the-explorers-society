@@ -7,6 +7,7 @@ import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-e
 import { LogService } from '@core/logging/log.service';
 import { PasswordService } from '@core/services/password/password.service';
 import { exceptionFactory } from '@core/validation/exception.factory';
+import { AuthModule } from '@modules/auth/auth.module';
 import { RolesModule } from '@modules/roles/roles.module';
 import { TenantsModule } from '@modules/tenants/tenants.module';
 import { UsersModule } from '@modules/users/users.module';
@@ -26,6 +27,7 @@ import { env } from '../env';
     TenantsModule,
     UsersModule,
     RolesModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

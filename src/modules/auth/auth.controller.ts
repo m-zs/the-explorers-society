@@ -15,7 +15,11 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
   })
-  async signIn(@Body() signInDto: SignInDto) {
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Invalid credentials',
+  })
+  async signIn(@Body() signInDto: SignInDto): Promise<boolean> {
     return await this.authService.signIn(signInDto);
   }
 }
