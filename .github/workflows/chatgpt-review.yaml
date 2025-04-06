@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     name: ChatGPT Code Review
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: GenAI Code Review
         uses: cirolini/genai-code-review@v2
         with:
