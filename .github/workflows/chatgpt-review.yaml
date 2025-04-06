@@ -5,6 +5,8 @@ on:
 jobs:
   code_review_job:
     runs-on: ubuntu-latest
+    environment:
+      name: test
     name: ChatGPT Code Review
     steps:
       - name: GenAI Code Review
