@@ -8,6 +8,7 @@ jobs:
     environment:
       name: test
     name: ChatGPT Code Review
+    if: false
     steps:
       - name: GenAI Code Review
         uses: dlidstrom/genai-code-review@v3.0.4
