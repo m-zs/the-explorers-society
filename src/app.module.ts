@@ -1,20 +1,26 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import * as cookieParser from 'cookie-parser';
 
 import { DatabaseModule } from '@core/database/database.module';
 import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-exception.filter';
 import { LogService } from '@core/logging/log.service';
 import { PasswordService } from '@core/services/password/password.service';
 import { exceptionFactory } from '@core/validation/exception.factory';
-import { AuthModule } from '@modules/auth/auth.module';
-import { RolesModule } from '@modules/roles/roles.module';
-import { TenantsModule } from '@modules/tenants/tenants.module';
-import { UsersModule } from '@modules/users/users.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { env } from '../env';
+import { AuthModule } from './modules/auth/auth.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { TenantsModule } from './modules/tenants/tenants.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -22,7 +28,6 @@ import { env } from '../env';
       isGlobal: true,
       envFilePath: env,
     }),
-
     DatabaseModule,
     TenantsModule,
     UsersModule,
@@ -47,6 +52,9 @@ import { env } from '../env';
     LogService,
     PasswordService,
   ],
-  exports: [PasswordService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(cookieParser()).forRoutes('*');
+  }
+}

@@ -21,4 +21,6 @@ export async function seed(knex: Knex): Promise<void> {
   ];
 
   await knex('roles').insert(roles);
+
+  console.log('Roles seeded successfully');
 }
