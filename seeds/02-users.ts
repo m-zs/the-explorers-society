@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Knex } from 'knex';
 import { faker } from '@faker-js/faker';
 import { PasswordService } from '@core/services/password/password.service';
+import { admin, user } from '@/test/data/users';
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('users').del();
@@ -11,9 +12,12 @@ export async function seed(knex: Knex): Promise<void> {
 
   const users = await Promise.all([
     {
-      name: 'admin',
-      password: await passwordService.hashPassword('admin'),
-      email: 'admin@admin.com',
+      ...admin,
+      password: await passwordService.hashPassword(admin.password),
+    },
+    {
+      ...user,
+      password: await passwordService.hashPassword(user.password),
     },
     ...Array.from({ length: 5 }, async () => {
       const name = faker.string.uuid();
