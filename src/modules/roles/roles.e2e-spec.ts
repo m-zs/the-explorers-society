@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import { faker } from '@faker-js/faker'; // Import faker.js
+import { faker } from '@faker-js/faker';
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
