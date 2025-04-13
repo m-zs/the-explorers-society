@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
   mixin,
@@ -24,24 +25,32 @@ export const AuthGuard = (requiredRoles?: AppRole[]) => {
         throw new UnauthorizedException('No token provided');
       }
 
+      let payload: JwtPayload;
       try {
-        const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
           secret: process.env.JWT_ACCESS_SECRET,
         });
-
-        request.user = {
-          ...payload,
-          tenantRoles: payload.tenantRoles || [],
-          roles: payload.roles || [],
-        };
-
-        if (!requiredRoles) {
-          return true;
-        }
-        return requiredRoles.some((role) => payload.roles?.includes(role));
       } catch {
         throw new UnauthorizedException('Invalid token');
       }
+
+      request.user = {
+        ...payload,
+        tenantRoles: payload.tenantRoles || [],
+        roles: payload.roles || [],
+      };
+
+      if (!requiredRoles) {
+        return true;
+      }
+
+      if (!requiredRoles.some((role) => payload.roles?.includes(role))) {
+        throw new ForbiddenException(
+          `You don't have app level required access level: ${requiredRoles.join(', ')}`,
+        );
+      }
+
+      return true;
     }
 
     extractTokenFromHeader(request: RequestWithUser): string | undefined {

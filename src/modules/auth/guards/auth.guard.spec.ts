@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -42,6 +43,22 @@ describe('AuthGuard', () => {
         switchToHttp: () => ({
           getRequest: () => ({
             headers: {},
+          }),
+        }),
+      } as ExecutionContext;
+
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw UnauthorizedException if token format is invalid', async () => {
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            headers: {
+              authorization: 'InvalidTokenFormat',
+            },
           }),
         }),
       } as ExecutionContext;
@@ -122,7 +139,36 @@ describe('AuthGuard', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false if user does not have required app role', async () => {
+    it('should return true if user has one of the required app roles', async () => {
+      const payload = {
+        sub: faker.string.uuid(),
+        email: faker.internet.email(),
+        roles: [AppRole.SUPPORT],
+        tenantRoles: [],
+      };
+      const validToken = faker.string.alphanumeric(32);
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            headers: {
+              authorization: `Bearer ${validToken}`,
+            },
+          }),
+        }),
+      } as ExecutionContext;
+
+      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+
+      const MultipleRolesGuardClass = AuthGuard([
+        AppRole.ADMIN,
+        AppRole.SUPPORT,
+      ]);
+      const multipleRolesGuard = new MultipleRolesGuardClass(jwtService);
+      const result = await multipleRolesGuard.canActivate(context);
+      expect(result).toBe(true);
+    });
+
+    it('should throw ForbiddenException if user does not have required app role', async () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
@@ -142,8 +188,9 @@ describe('AuthGuard', () => {
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
 
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should attach payload to request if token is valid', async () => {
@@ -171,11 +218,7 @@ describe('AuthGuard', () => {
       const NoRolesGuardClass = AuthGuard();
       const noRolesGuard = new NoRolesGuardClass(jwtService);
       await noRolesGuard.canActivate(context);
-      expect(request['user']).toEqual({
-        ...payload,
-        tenantRoles: [],
-        roles: [AppRole.USER],
-      });
+      expect(request['user']).toEqual(payload);
     });
   });
 });
