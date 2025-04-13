@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test,seeds}/**/*.ts\"",
     "lint:fix": "pnpm run lint --fix",
     "test": "cross-env NODE_ENV=test jest --passWithNoTests",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
@@ -21,9 +21,11 @@
     "test:e2e": "cross-env NODE_ENV=test jest --config jest-e2e.ts --passWithNoTests --runInBand --detectOpenHandles",
     "prepare": "husky",
     "knex": "knex",
+    "seed:all": "pnpm run knex seed:run",
     "seed:tenants": "ts-node -r tsconfig-paths/register src/modules/tenants/cli/tenants.cli.ts tenants-seed",
     "seed:users": "ts-node -r tsconfig-paths/register src/modules/users/cli/users.cli.ts users-seed",
-    "seed:roles": "ts-node -r tsconfig-paths/register src/modules/roles/cli/roles.cli.ts roles-seed"
+    "seed:roles": "ts-node -r tsconfig-paths/register src/modules/roles/cli/roles.cli.ts roles-seed",
+    "db:reset": "pnpm run knex migrate:rollback --all && pnpm run knex migrate:latest && pnpm run knex seed:run"
   },
   "lint-staged": {
     "src/**/*.ts": [

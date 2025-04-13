@@ -1,6 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { RoleModel } from '@modules/roles/models/role.model';
+import { TenantModel } from '@modules/tenants/models/tenant.model';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserModel } from './models/user.model';
@@ -17,12 +20,54 @@ const generateMockUser = (id?: number): Omit<UserModel, 'password'> => {
   return user;
 };
 
+const generateMockUserWithTenants = (id?: number) => {
+  const user = generateMockUser(id);
+  const tenants = Array.from({ length: 2 }, () => {
+    const tenant = new TenantModel();
+    tenant.id = faker.number.int({ min: 1, max: 1000 });
+    tenant.name = faker.company.name();
+    return tenant;
+  });
+  return { ...user, tenants };
+};
+
+const generateMockUserWithRoles = (id?: number) => {
+  const user = generateMockUser(id);
+  const roles = Array.from({ length: 2 }, () => {
+    const role = new RoleModel();
+    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.name = faker.person.jobTitle();
+    return role;
+  });
+  return { ...user, roles };
+};
+
+const generateMockUserWithTenantsAndRoles = (id?: number) => {
+  const user = generateMockUser(id);
+  const tenants = Array.from({ length: 2 }, () => {
+    const tenant = new TenantModel();
+    tenant.id = faker.number.int({ min: 1, max: 1000 });
+    tenant.name = faker.company.name();
+    return tenant;
+  });
+  const roles = Array.from({ length: 2 }, () => {
+    const role = new RoleModel();
+    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.name = faker.person.jobTitle();
+    return role;
+  });
+  return { ...user, tenants, roles };
+};
+
 describe('UsersController', () => {
   let usersController: UsersController;
   let usersService: UsersService;
 
   const mockUser = generateMockUser();
   const mockUsers = Array.from({ length: 5 }, generateMockUser);
+  const mockUserWithTenants = generateMockUserWithTenants();
+  const mockUserWithRoles = generateMockUserWithRoles();
+  const mockUserWithTenantsAndRoles = generateMockUserWithTenantsAndRoles();
 
   const mockUsersService = {
     create: jest.fn().mockResolvedValue(mockUser),
@@ -30,9 +75,11 @@ describe('UsersController', () => {
     findOne: jest.fn().mockResolvedValue(mockUser),
     update: jest.fn().mockResolvedValue(mockUser),
     remove: jest.fn().mockResolvedValue(1),
-    getUserWithTenants: jest.fn().mockResolvedValue(mockUser),
-    getUserWithRoles: jest.fn().mockResolvedValue(mockUser),
-    getUserWithTenantsAndRoles: jest.fn().mockResolvedValue(mockUser),
+    getUserWithTenants: jest.fn().mockResolvedValue(mockUserWithTenants),
+    getUserWithRoles: jest.fn().mockResolvedValue(mockUserWithRoles),
+    getUserWithTenantsAndRoles: jest
+      .fn()
+      .mockResolvedValue(mockUserWithTenantsAndRoles),
   };
 
   beforeEach(async () => {
@@ -118,10 +165,10 @@ describe('UsersController', () => {
 
       jest
         .spyOn(usersService, 'getUserWithTenants')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithTenants);
 
       const result = await usersController.getUserWithTenants(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithTenants);
       expect(usersService.getUserWithTenants).toHaveBeenCalledWith(id);
     });
   });
@@ -132,10 +179,10 @@ describe('UsersController', () => {
 
       jest
         .spyOn(usersService, 'getUserWithRoles')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithRoles);
 
       const result = await usersController.getUserWithRoles(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithRoles);
       expect(usersService.getUserWithRoles).toHaveBeenCalledWith(id);
     });
   });
@@ -146,10 +193,10 @@ describe('UsersController', () => {
 
       jest
         .spyOn(usersService, 'getUserWithTenantsAndRoles')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithTenantsAndRoles);
 
       const result = await usersController.getUserWithTenantsAndRoles(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithTenantsAndRoles);
       expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(id);
     });
   });

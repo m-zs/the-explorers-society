@@ -1,6 +1,6 @@
+import * as path from 'path';
+
 import { BaseModel } from '@core/database/models/base.model';
-import { RoleModel } from '@modules/roles/models/role.model';
-import { TenantModel } from '@modules/tenants/models/tenant.model';
 
 export class UserModel extends BaseModel {
   static tableName = 'users';
@@ -13,7 +13,7 @@ export class UserModel extends BaseModel {
   static relationMappings = {
     tenants: {
       relation: BaseModel.ManyToManyRelation,
-      modelClass: TenantModel,
+      modelClass: path.join(__dirname, '../../tenants/models/tenant.model'),
       join: {
         from: 'users.id',
         through: {
@@ -25,7 +25,7 @@ export class UserModel extends BaseModel {
     },
     roles: {
       relation: BaseModel.ManyToManyRelation,
-      modelClass: RoleModel,
+      modelClass: path.join(__dirname, '../../roles/models/role.model'),
       join: {
         from: 'users.id',
         through: {

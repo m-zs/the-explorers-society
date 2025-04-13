@@ -22,16 +22,17 @@ const models: Provider[] = [
     useValue: TenantModel,
   },
   {
-    provide: 'UserModel',
-    useValue: UserModel,
-  },
-  {
     provide: 'RoleModel',
     useValue: RoleModel,
+  },
+  {
+    provide: 'UserModel',
+    useValue: UserModel,
   },
 ];
 
 const providers: Provider[] = [
+  ...models,
   {
     provide: 'KnexConnection',
     inject: [ConfigService],
@@ -52,10 +53,10 @@ const providers: Provider[] = [
       }
 
       Model.knex(knex);
+
       return knex;
     },
   },
-  ...models,
 ];
 
 @Global()

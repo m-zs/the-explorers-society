@@ -1,9 +1,10 @@
 import 'tsconfig-paths/register';
+import { faker } from '@faker-js/faker';
 import { ConfigService } from '@nestjs/config';
 import { Knex } from 'knex';
-import { faker } from '@faker-js/faker';
-import { PasswordService } from '@core/services/password/password.service';
+
 import { admin, user } from '@/test/data/users';
+import { PasswordService } from '@core/services/password/password.service';
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('users').del();

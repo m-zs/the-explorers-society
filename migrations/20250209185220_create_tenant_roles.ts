@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
     table
       .integer('tenant_id')
       .unsigned()
-      .notNullable()
+      .nullable()
       .references('id')
       .inTable('tenants')
       .onDelete('CASCADE');

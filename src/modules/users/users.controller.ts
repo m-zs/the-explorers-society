@@ -10,7 +10,12 @@ import {
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserModel } from './models/user.model';
+import {
+  UserWithoutPassword,
+  UserWithTenants,
+  UserWithRoles,
+  UserWithTenantsAndRoles,
+} from './types/user.types';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -20,19 +25,19 @@ export class UsersController {
   @Post()
   async create(
     @Body() createUserDto: CreateUserDto,
-  ): Promise<Omit<UserModel, 'password'>> {
+  ): Promise<UserWithoutPassword> {
     return await this.usersService.create(createUserDto);
   }
 
   @Get()
-  async findAll(): Promise<Omit<UserModel, 'password'>[]> {
+  async findAll(): Promise<UserWithoutPassword[]> {
     return await this.usersService.findAll();
   }
 
   @Get(':id')
   async findOne(
     @Param('id') id: number,
-  ): Promise<Omit<UserModel, 'password'> | undefined> {
+  ): Promise<UserWithoutPassword | undefined> {
     return await this.usersService.findOne(id);
   }
 
@@ -40,7 +45,7 @@ export class UsersController {
   async update(
     @Param('id') id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<Omit<UserModel, 'password'> | undefined> {
+  ): Promise<UserWithoutPassword | undefined> {
     return await this.usersService.update(id, updateUserDto);
   }
 
@@ -52,21 +57,21 @@ export class UsersController {
   @Get(':id/tenants')
   async getUserWithTenants(
     @Param('id') id: number,
-  ): Promise<Omit<UserModel, 'password'> | undefined> {
+  ): Promise<UserWithTenants | undefined> {
     return await this.usersService.getUserWithTenants(id);
   }
 
   @Get(':id/roles')
   async getUserWithRoles(
     @Param('id') id: number,
-  ): Promise<Omit<UserModel, 'password'> | undefined> {
+  ): Promise<UserWithRoles | undefined> {
     return await this.usersService.getUserWithRoles(id);
   }
 
-  @Get(':id/tenants-roles')
+  @Get(':id/tenants-and-roles')
   async getUserWithTenantsAndRoles(
     @Param('id') id: number,
-  ): Promise<Omit<UserModel, 'password'> | undefined> {
+  ): Promise<UserWithTenantsAndRoles | undefined> {
     return await this.usersService.getUserWithTenantsAndRoles(id);
   }
 }

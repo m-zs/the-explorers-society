@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Res,
   UseGuards,
+  Get,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -17,6 +18,8 @@ import {
 } from './constants/cookie-options.constant';
 import { SignInDto } from './dto/sign-in.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
+import { AppRole } from './enums/app-role.enum';
+import { AuthGuard } from './guards/auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { RequestWithCookies } from './interfaces/request-with-cookies.interface';
 
@@ -74,7 +77,7 @@ export class AuthController {
     ]!;
     const payload = await this.authService.verifyRefreshToken(refreshToken);
     const { accessToken, refreshToken: newRefreshToken } =
-      await this.authService.refreshTokens(payload.sub, payload.email);
+      await this.authService.refreshTokens(Number(payload.sub), payload.email);
 
     res.cookie(
       REFRESH_TOKEN_COOKIE_NAME,
@@ -97,5 +100,20 @@ export class AuthController {
       ...REFRESH_TOKEN_COOKIE_OPTIONS,
       maxAge: 0,
     });
+  }
+
+  @Get('auth-test')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Auth passed',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Invalid or missing refresh token',
+  })
+  @UseGuards(AuthGuard([AppRole.USER]))
+  test() {
+    return;
   }
 }

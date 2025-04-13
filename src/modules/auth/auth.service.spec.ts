@@ -4,8 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PasswordService } from '@core/services/password/password.service';
+import { UserRepository } from '@modules/users/users.repository';
+import { UsersService } from '@modules/users/users.service';
 
-import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { InternalTokens } from './interfaces/internal-tokens.interface';
@@ -13,11 +14,12 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let authRepository: AuthRepository;
+  let userRepository: UserRepository;
   let passwordService: PasswordService;
   let jwtService: JwtService;
+  let usersService: UsersService;
 
-  const mockAuthRepository = {
+  const mockUserRepository = {
     getUserByEmail: jest.fn(),
   };
 
@@ -30,13 +32,17 @@ describe('AuthService', () => {
     verifyAsync: jest.fn(),
   };
 
+  const mockUsersService = {
+    getUserWithTenantsAndRoles: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
-          provide: AuthRepository,
-          useValue: mockAuthRepository,
+          provide: UserRepository,
+          useValue: mockUserRepository,
         },
         {
           provide: PasswordService,
@@ -46,13 +52,18 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    authRepository = module.get<AuthRepository>(AuthRepository);
+    userRepository = module.get<UserRepository>(UserRepository);
     passwordService = module.get<PasswordService>(PasswordService);
     jwtService = module.get<JwtService>(JwtService);
+    usersService = module.get<UsersService>(UsersService);
     jest.clearAllMocks();
   });
 
@@ -63,12 +74,14 @@ describe('AuthService', () => {
     };
 
     it('should throw UnauthorizedException if user is not found', async () => {
-      mockAuthRepository.getUserByEmail.mockResolvedValue(null);
+      mockUserRepository.getUserByEmail.mockResolvedValue(null);
 
       await expect(service.signIn(signInDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(authRepository.getUserByEmail).toHaveBeenCalledWith(signInDto);
+      expect(userRepository.getUserByEmail).toHaveBeenCalledWith(
+        signInDto.email,
+      );
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
@@ -77,13 +90,15 @@ describe('AuthService', () => {
         email: signInDto.email,
         password: faker.internet.password(),
       };
-      mockAuthRepository.getUserByEmail.mockResolvedValue(mockUser);
+      mockUserRepository.getUserByEmail.mockResolvedValue(mockUser);
       mockPasswordService.comparePassword.mockResolvedValue(false);
 
       await expect(service.signIn(signInDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(authRepository.getUserByEmail).toHaveBeenCalledWith(signInDto);
+      expect(userRepository.getUserByEmail).toHaveBeenCalledWith(
+        signInDto.email,
+      );
       expect(passwordService.comparePassword).toHaveBeenCalledWith(
         signInDto.password,
         mockUser.password,
@@ -96,21 +111,33 @@ describe('AuthService', () => {
         email: signInDto.email,
         password: faker.internet.password(),
       };
+      const mockUserWithRoles = {
+        ...mockUser,
+        roles: [{ name: 'USER', type: 'APP' }],
+      };
       const mockTokens: InternalTokens = {
         accessToken: faker.string.alphanumeric(32),
         refreshToken: faker.string.alphanumeric(32),
       };
-      mockAuthRepository.getUserByEmail.mockResolvedValue(mockUser);
+      mockUserRepository.getUserByEmail.mockResolvedValue(mockUser);
       mockPasswordService.comparePassword.mockResolvedValue(true);
+      mockUsersService.getUserWithTenantsAndRoles.mockResolvedValue(
+        mockUserWithRoles,
+      );
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.accessToken);
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.refreshToken);
 
       const result = await service.signIn(signInDto);
       expect(result).toEqual(mockTokens);
-      expect(authRepository.getUserByEmail).toHaveBeenCalledWith(signInDto);
+      expect(userRepository.getUserByEmail).toHaveBeenCalledWith(
+        signInDto.email,
+      );
       expect(passwordService.comparePassword).toHaveBeenCalledWith(
         signInDto.password,
         mockUser.password,
+      );
+      expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(
+        mockUser.id,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
     });
@@ -120,15 +147,26 @@ describe('AuthService', () => {
     it('should generate new tokens', async () => {
       const userId = faker.number.int();
       const email = faker.internet.email();
+      const mockUserWithRoles = {
+        id: userId,
+        email,
+        roles: [{ name: 'USER', type: 'APP' }],
+      };
       const mockTokens: InternalTokens = {
         accessToken: faker.string.alphanumeric(32),
         refreshToken: faker.string.alphanumeric(32),
       };
+      mockUsersService.getUserWithTenantsAndRoles.mockResolvedValue(
+        mockUserWithRoles,
+      );
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.accessToken);
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.refreshToken);
 
       const result = await service.refreshTokens(userId, email);
       expect(result).toEqual(mockTokens);
+      expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(
+        userId,
+      );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
     });
   });
@@ -137,8 +175,9 @@ describe('AuthService', () => {
     it('should return payload if token is valid', async () => {
       const token = faker.string.alphanumeric(32);
       const mockPayload: JwtPayload = {
-        sub: faker.number.int(),
+        sub: faker.string.uuid(),
         email: faker.internet.email(),
+        tenantId: faker.string.uuid(),
       };
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
 
