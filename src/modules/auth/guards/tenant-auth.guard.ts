@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
   mixin,
@@ -28,7 +29,13 @@ export const TenantAuthGuard = (roles?: TenantRole[]) => {
         throw new UnauthorizedException('User has no tenant roles');
       }
 
-      return roles.some((role) => user.tenantRoles?.includes(role));
+      if (!roles.some((role) => user.tenantRoles?.includes(role))) {
+        throw new ForbiddenException(
+          `You don't have tenant level required access level: ${roles.join(', ')}`,
+        );
+      }
+
+      return true;
     }
   }
 
