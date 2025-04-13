@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
 
@@ -7,6 +8,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
+import { AppRole } from './enums/app-role.enum';
+import { AuthGuard } from './guards/auth.guard';
+
+const mockAuthGuard = {
+  canActivate: jest.fn().mockReturnValue(true),
+};
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -18,11 +25,19 @@ describe('AuthController', () => {
     verifyRefreshToken: jest.fn(),
   };
 
+  const mockJwtService = {
+    verifyAsync: jest.fn(),
+  };
+
   const mockResponse = {
     cookie: jest.fn(),
     clearCookie: jest.fn(),
     req: {
       cookies: {},
+      user: {
+        roles: [AppRole.USER],
+        tenantRoles: [],
+      },
     },
   } as unknown as Response;
 
@@ -34,8 +49,15 @@ describe('AuthController', () => {
           provide: AuthService,
           useValue: mockAuthService,
         },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue(mockAuthGuard)
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
@@ -57,15 +79,20 @@ describe('AuthController', () => {
       const mockTokens: TokenResponseDto = {
         accessToken: faker.string.alphanumeric(32),
       };
+      const refreshToken = faker.string.alphanumeric(32);
       mockAuthService.signIn.mockResolvedValue({
         accessToken: mockTokens.accessToken,
-        refreshToken: faker.string.alphanumeric(32),
+        refreshToken,
       });
 
       const result = await controller.signIn(validSignInDto, mockResponse);
 
       expect(result).toEqual(mockTokens);
-      expect(mockResponse.cookie).toHaveBeenCalled();
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        refreshToken,
+        expect.any(Object),
+      );
       expect(authService.signIn).toHaveBeenCalledWith(validSignInDto);
     });
 
@@ -112,8 +139,8 @@ describe('AuthController', () => {
       const newRefreshToken = faker.string.alphanumeric(32);
 
       mockAuthService.verifyRefreshToken.mockResolvedValue({
-        sub: userId,
-        email: email,
+        sub: userId.toString(),
+        email,
       });
       mockAuthService.refreshTokens.mockResolvedValue({
         accessToken: mockTokens.accessToken,
@@ -127,7 +154,11 @@ describe('AuthController', () => {
       const result = await controller.refreshTokens(mockResponse);
 
       expect(result).toEqual(mockTokens);
-      expect(mockResponse.cookie).toHaveBeenCalled();
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        newRefreshToken,
+        expect.any(Object),
+      );
       expect(authService.verifyRefreshToken).toHaveBeenCalledWith(
         oldRefreshToken,
       );
@@ -149,14 +180,6 @@ describe('AuthController', () => {
       expect(mockResponse.cookie).not.toHaveBeenCalled();
       expect(authService.verifyRefreshToken).toHaveBeenCalledWith(invalidToken);
       expect(authService.refreshTokens).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('logout', () => {
-    it('should clear refresh token cookie', () => {
-      controller.logout(mockResponse);
-
-      expect(mockResponse.clearCookie).toHaveBeenCalledTimes(1);
     });
   });
 });

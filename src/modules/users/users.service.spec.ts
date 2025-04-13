@@ -2,6 +2,8 @@ import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleModel } from '@modules/roles/models/role.model';
+import { TenantModel } from '@modules/tenants/models/tenant.model';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,6 +21,45 @@ const generateMockUser = (id?: number): Omit<UserModel, 'password'> => {
   return user;
 };
 
+const generateMockUserWithTenants = (id?: number) => {
+  const user = generateMockUser(id);
+  const tenants = Array.from({ length: 2 }, () => {
+    const tenant = new TenantModel();
+    tenant.id = faker.number.int({ min: 1, max: 1000 });
+    tenant.name = faker.company.name();
+    return tenant;
+  });
+  return { ...user, tenants };
+};
+
+const generateMockUserWithRoles = (id?: number) => {
+  const user = generateMockUser(id);
+  const roles = Array.from({ length: 2 }, () => {
+    const role = new RoleModel();
+    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.name = faker.person.jobTitle();
+    return role;
+  });
+  return { ...user, roles };
+};
+
+const generateMockUserWithTenantsAndRoles = (id?: number) => {
+  const user = generateMockUser(id);
+  const tenants = Array.from({ length: 2 }, () => {
+    const tenant = new TenantModel();
+    tenant.id = faker.number.int({ min: 1, max: 1000 });
+    tenant.name = faker.company.name();
+    return tenant;
+  });
+  const roles = Array.from({ length: 2 }, () => {
+    const role = new RoleModel();
+    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.name = faker.person.jobTitle();
+    return role;
+  });
+  return { ...user, tenants, roles };
+};
+
 describe('UsersService', () => {
   let usersService: UsersService;
   let userRepository: UserRepository;
@@ -26,6 +67,9 @@ describe('UsersService', () => {
 
   const mockUser = generateMockUser();
   const mockUsers = Array.from({ length: 5 }, generateMockUser);
+  const mockUserWithTenants = generateMockUserWithTenants();
+  const mockUserWithRoles = generateMockUserWithRoles();
+  const mockUserWithTenantsAndRoles = generateMockUserWithTenantsAndRoles();
 
   const mockUserRepository = {
     createUser: jest.fn().mockResolvedValue(mockUser),
@@ -33,9 +77,11 @@ describe('UsersService', () => {
     getUserById: jest.fn().mockResolvedValue(mockUser),
     updateUser: jest.fn().mockResolvedValue(mockUser),
     removeUser: jest.fn().mockResolvedValue(1),
-    getUserWithTenants: jest.fn().mockResolvedValue(mockUser),
-    getUserWithRoles: jest.fn().mockResolvedValue(mockUser),
-    getUserWithTenantsAndRoles: jest.fn().mockResolvedValue(mockUser),
+    getUserWithTenants: jest.fn().mockResolvedValue(mockUserWithTenants),
+    getUserWithRoles: jest.fn().mockResolvedValue(mockUserWithRoles),
+    getUserWithTenantsAndRoles: jest
+      .fn()
+      .mockResolvedValue(mockUserWithTenantsAndRoles),
   };
 
   const mockPasswordService = {
@@ -161,10 +207,10 @@ describe('UsersService', () => {
 
       jest
         .spyOn(userRepository, 'getUserWithTenants')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithTenants);
 
       const result = await usersService.getUserWithTenants(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithTenants);
       expect(userRepository.getUserWithTenants).toHaveBeenCalledWith(id);
     });
   });
@@ -175,10 +221,10 @@ describe('UsersService', () => {
 
       jest
         .spyOn(userRepository, 'getUserWithRoles')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithRoles);
 
       const result = await usersService.getUserWithRoles(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithRoles);
       expect(userRepository.getUserWithRoles).toHaveBeenCalledWith(id);
     });
   });
@@ -189,10 +235,10 @@ describe('UsersService', () => {
 
       jest
         .spyOn(userRepository, 'getUserWithTenantsAndRoles')
-        .mockResolvedValueOnce(mockUser);
+        .mockResolvedValueOnce(mockUserWithTenantsAndRoles);
 
       const result = await usersService.getUserWithTenantsAndRoles(id);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserWithTenantsAndRoles);
       expect(userRepository.getUserWithTenantsAndRoles).toHaveBeenCalledWith(
         id,
       );
