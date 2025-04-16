@@ -79,7 +79,11 @@ export class AuthController {
     ]!;
     const payload = await this.authService.verifyRefreshToken(refreshToken);
     const { accessToken, refreshToken: newRefreshToken } =
-      await this.authService.refreshTokens(Number(payload.sub), payload.email);
+      await this.authService.refreshTokens(
+        Number(payload.sub),
+        payload.email,
+        +payload.tenantId,
+      );
 
     res.cookie(
       REFRESH_TOKEN_COOKIE_NAME,
@@ -118,7 +122,7 @@ export class AuthController {
     status: HttpStatus.FORBIDDEN,
     description: 'Invalid access level',
   })
-  @UseGuards(AuthGuard([AppRole.USER]), TenantAuthGuard([TenantRole.ADMIN]))
+  @UseGuards(AuthGuard([AppRole.USER]), TenantAuthGuard([TenantRole.SUPPORT]))
   test() {
     return;
   }

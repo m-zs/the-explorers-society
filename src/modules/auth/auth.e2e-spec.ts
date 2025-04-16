@@ -17,7 +17,7 @@ import { TokenResponseDto } from './dto/token-response.dto';
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
   let server: App;
-  let refreshToken: string;
+  const tenantId = faker.number.int();
 
   beforeAll(async () => {
     jest.setTimeout(30000);
@@ -49,11 +49,13 @@ describe('AuthController (e2e)', () => {
     const signInDto: SignInDto = {
       email: faker.internet.email(),
       password: faker.internet.password(),
+      tenantId,
     };
 
     it('should return 401 for invalid credentials', async () => {
       const response = await request(server)
         .post('/auth/login')
+        .set('x-tenant-id', tenantId.toString())
         .send(signInDto);
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
@@ -64,6 +66,7 @@ describe('AuthController (e2e)', () => {
     it('should return 400 for invalid email format', async () => {
       const response = await request(server)
         .post('/auth/login')
+        .set('x-tenant-id', tenantId.toString())
         .send({ ...signInDto, email: 'invalid-email' });
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
@@ -74,6 +77,7 @@ describe('AuthController (e2e)', () => {
     it('should return 400 for empty password', async () => {
       const response = await request(server)
         .post('/auth/login')
+        .set('x-tenant-id', tenantId.toString())
         .send({ ...signInDto, password: '' });
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
@@ -84,7 +88,8 @@ describe('AuthController (e2e)', () => {
     it('should log in with admin credentials and set refresh token cookie', async () => {
       const response = await request(server)
         .post('/auth/login')
-        .send({ email: admin.email, password: admin.password });
+        .set('x-tenant-id', tenantId.toString())
+        .send({ email: admin.email, password: admin.password, tenantId });
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
       expect(response.status).toBe(HttpStatus.OK);
@@ -108,7 +113,8 @@ describe('AuthController (e2e)', () => {
     it('should log in with user credentials', async () => {
       const response = await request(server)
         .post('/auth/login')
-        .send({ email: user.email, password: user.password });
+        .set('x-tenant-id', tenantId.toString())
+        .send({ email: user.email, password: user.password, tenantId });
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
       expect(response.status).toBe(HttpStatus.OK);
@@ -122,7 +128,9 @@ describe('AuthController (e2e)', () => {
 
   describe('POST /auth/refresh', () => {
     it('should return 401 without refresh token', async () => {
-      const response = await request(server).post('/auth/refresh');
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('x-tenant-id', tenantId.toString());
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
       expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
@@ -132,6 +140,7 @@ describe('AuthController (e2e)', () => {
     it('should return 401 with invalid refresh token', async () => {
       const response = await request(server)
         .post('/auth/refresh')
+        .set('x-tenant-id', tenantId.toString())
         .set('Cookie', [`${REFRESH_TOKEN_COOKIE_NAME}=invalid-token`]);
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
@@ -140,8 +149,29 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should refresh tokens with valid refresh token', async () => {
+      // First, log in to get a valid refresh token
+      const loginResponse = await request(server)
+        .post('/auth/login')
+        .set('x-tenant-id', tenantId.toString())
+        .send({ email: admin.email, password: admin.password, tenantId });
+
+      const cookies = loginResponse.headers[
+        'set-cookie'
+      ] as unknown as string[];
+      const refreshTokenCookie = cookies.find((cookie) =>
+        cookie.startsWith(`${REFRESH_TOKEN_COOKIE_NAME}=`),
+      );
+
+      if (!refreshTokenCookie) {
+        throw new Error('No refresh token cookie found in login response');
+      }
+
+      const refreshToken = refreshTokenCookie.split(';')[0].split('=')[1];
+
+      // Then use the refresh token to get new tokens
       const response = await request(server)
         .post('/auth/refresh')
+        .set('x-tenant-id', tenantId.toString())
         .set('Cookie', [`${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`]);
       const typedResponse = getTypedResponse<TokenResponseDto>(response);
 
@@ -156,7 +186,9 @@ describe('AuthController (e2e)', () => {
 
   describe('POST /auth/logout', () => {
     it('should clear refresh token cookie', async () => {
-      const response = await request(server).post('/auth/logout');
+      const response = await request(server)
+        .post('/auth/logout')
+        .set('x-tenant-id', tenantId.toString());
 
       expect(response.status).toBe(HttpStatus.OK);
       expect(response.headers['set-cookie']).toBeDefined();

@@ -7,8 +7,8 @@ export interface RequestWithUser extends Request {
   user: {
     sub: string;
     email: string;
-    tenantId: string;
-    tenantRoles: TenantRole[];
-    roles: AppRole[];
+    tenantRoles?: TenantRole[];
+    roles?: AppRole[];
   };
+  tenantId: number;
 }

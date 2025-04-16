@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class SignInDto {
   @ApiProperty({
@@ -17,4 +18,13 @@ export class SignInDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  @ApiProperty({
+    description: 'Tenant ID',
+    example: 1,
+  })
+  @Transform(({ value }) => +value)
+  @IsNumber()
+  @IsNotEmpty()
+  tenantId: number;
 }
