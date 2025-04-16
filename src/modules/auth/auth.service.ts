@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
 import { RoleModel } from '@modules/roles/models/role.model';
 import { RoleType } from '@modules/users/role.enum';
 import { UserRepository } from '@modules/users/users.repository';
@@ -19,6 +20,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly roleCacheService: RoleCacheService,
   ) {}
 
   async signIn(signInDto: SignInDto): Promise<InternalTokens> {
@@ -36,12 +38,20 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(
+      user.id,
+      user.email,
+      signInDto.tenantId,
+    );
     return tokens;
   }
 
-  async refreshTokens(userId: number, email: string): Promise<InternalTokens> {
-    return this.getTokens(userId, email);
+  async refreshTokens(
+    userId: number,
+    email: string,
+    tenantId: number,
+  ): Promise<InternalTokens> {
+    return this.getTokens(userId, email, tenantId);
   }
 
   async verifyRefreshToken(token: string): Promise<JwtPayload> {
@@ -58,6 +68,7 @@ export class AuthService {
   private async getTokens(
     userId: number,
     email: string,
+    tenantId: number,
   ): Promise<InternalTokens> {
     // Get user with their roles and tenant roles
     const userWithRoles =
@@ -69,28 +80,54 @@ export class AuthService {
     // Extract roles and tenant roles
     const userRoles = userWithRoles.roles || [];
 
-    const roles: AppRole[] = userRoles.map(
-      (role: RoleModel) => role.name as AppRole,
-    );
-
-    const tenantRoles: string[] = userRoles
-      .filter((role: RoleModel) => role.type === RoleType.TENANT)
-      .map((role: RoleModel) => role.name);
+    const roles: AppRole[] = userRoles
+      .filter((role: RoleModel) => role.type === RoleType.GLOBAL)
+      .map((role: RoleModel) => role.name as AppRole);
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
           email,
-          roles,
-          tenantRoles,
+          tenantId,
         },
         { secret: process.env.JWT_ACCESS_SECRET },
       ),
       this.jwtService.signAsync(
-        { sub: userId, email },
+        { sub: userId, email, tenantId },
         { secret: process.env.JWT_REFRESH_SECRET },
       ),
+    ]);
+
+    const tenantRoles = userWithRoles.roles.reduce(
+      (acc, role) => {
+        if (role.type === RoleType.TENANT) {
+          if (!acc[role.tenantId]) {
+            acc[role.tenantId] = [];
+          }
+          acc[role.tenantId].push(role.name);
+        }
+        return acc;
+      },
+      {} as Record<number, string[]>,
+    );
+
+    await Promise.all([
+      ...Object.entries(tenantRoles).map(([tenantId, roles]) => {
+        return this.roleCacheService.cacheUserRoles({
+          userId,
+          payload: {
+            roles,
+          },
+          tenantId: +tenantId,
+        });
+      }),
+      this.roleCacheService.cacheUserRoles({
+        userId,
+        payload: {
+          roles,
+        },
+      }),
     ]);
 
     return {

@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
+
 import { AppRole } from '../enums/app-role.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { RequestWithUser } from '../interfaces/request-with-user.interface';
@@ -15,7 +17,10 @@ import { RequestWithUser } from '../interfaces/request-with-user.interface';
 export const AuthGuard = (requiredRoles?: AppRole[]) => {
   @Injectable()
   class AuthGuardMixin implements CanActivate {
-    constructor(public jwtService: JwtService) {}
+    constructor(
+      public jwtService: JwtService,
+      public roleCacheService: RoleCacheService,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest<RequestWithUser>();
@@ -34,17 +39,18 @@ export const AuthGuard = (requiredRoles?: AppRole[]) => {
         throw new UnauthorizedException('Invalid token');
       }
 
+      const roleData = await this.roleCacheService.getCachedRoles(+payload.sub);
+
       request.user = {
         ...payload,
-        tenantRoles: payload.tenantRoles || [],
-        roles: payload.roles || [],
+        roles: (roleData?.roles as AppRole[]) || [],
       };
 
       if (!requiredRoles) {
         return true;
       }
 
-      if (!requiredRoles.some((role) => payload.roles?.includes(role))) {
+      if (!requiredRoles.some((role) => roleData?.roles.includes(role))) {
         throw new ForbiddenException(
           `You don't have app level required access level: ${requiredRoles.join(', ')}`,
         );

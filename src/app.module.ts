@@ -11,12 +11,14 @@ import * as cookieParser from 'cookie-parser';
 import { DatabaseModule } from '@core/database/database.module';
 import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-exception.filter';
 import { LogService } from '@core/logging/log.service';
+import { RedisModule } from '@core/redis/redis.module';
 import { PasswordService } from '@core/services/password/password.service';
 import { exceptionFactory } from '@core/validation/exception.factory';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { env } from '../env';
+import { TenantMiddleware } from './core/middleware/tenant.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -29,6 +31,7 @@ import { UsersModule } from './modules/users/users.module';
       envFilePath: env,
     }),
     DatabaseModule,
+    RedisModule,
     TenantsModule,
     UsersModule,
     RolesModule,
@@ -55,6 +58,6 @@ import { UsersModule } from './modules/users/users.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cookieParser()).forRoutes('*');
+    consumer.apply(cookieParser(), TenantMiddleware).forRoutes('*');
   }
 }

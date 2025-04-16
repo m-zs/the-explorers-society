@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
 
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
@@ -27,6 +29,11 @@ describe('AuthController', () => {
 
   const mockJwtService = {
     verifyAsync: jest.fn(),
+  };
+
+  const mockRoleCacheService = {
+    getRolePermissions: jest.fn(),
+    cacheUserRoles: jest.fn(),
   };
 
   const mockResponse = {
@@ -53,6 +60,10 @@ describe('AuthController', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: RoleCacheService,
+          useValue: mockRoleCacheService,
+        },
       ],
     })
       .overrideGuard(AuthGuard)
@@ -68,11 +79,13 @@ describe('AuthController', () => {
     const validSignInDto: SignInDto = {
       email: faker.internet.email(),
       password: faker.internet.password(),
+      tenantId: faker.number.int(),
     };
 
     const invalidSignInDto: SignInDto = {
       email: faker.internet.email(),
       password: faker.internet.password(),
+      tenantId: faker.number.int(),
     };
 
     it('should return access token and set refresh token cookie on successful login', async () => {
@@ -110,6 +123,7 @@ describe('AuthController', () => {
       const testDto: SignInDto = {
         email: faker.internet.email(),
         password: faker.internet.password(),
+        tenantId: faker.number.int(),
       };
 
       mockAuthService.signIn.mockResolvedValue({
@@ -123,6 +137,7 @@ describe('AuthController', () => {
         expect.objectContaining({
           email: testDto.email,
           password: testDto.password,
+          tenantId: testDto.tenantId,
         }),
       );
     });
@@ -135,12 +150,14 @@ describe('AuthController', () => {
       };
       const userId = faker.number.int();
       const email = faker.internet.email();
+      const tenantId = faker.number.int();
       const oldRefreshToken = faker.string.alphanumeric(32);
       const newRefreshToken = faker.string.alphanumeric(32);
 
       mockAuthService.verifyRefreshToken.mockResolvedValue({
         sub: userId.toString(),
         email,
+        tenantId,
       });
       mockAuthService.refreshTokens.mockResolvedValue({
         accessToken: mockTokens.accessToken,
@@ -162,7 +179,11 @@ describe('AuthController', () => {
       expect(authService.verifyRefreshToken).toHaveBeenCalledWith(
         oldRefreshToken,
       );
-      expect(authService.refreshTokens).toHaveBeenCalledWith(userId, email);
+      expect(authService.refreshTokens).toHaveBeenCalledWith(
+        userId,
+        email,
+        tenantId,
+      );
     });
 
     it('should throw UnauthorizedException when token verification fails', async () => {

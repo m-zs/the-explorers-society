@@ -76,7 +76,10 @@ export class UserRepository {
       .query()
       .findById(id)
       .select('id', 'name', 'email')
-      .withGraphFetched('[tenants, roles]');
+      .withGraphFetched('[tenants, roles]')
+      .modifyGraph('roles', (builder) => {
+        builder.select('roles.*', 'tenant_roles.tenant_id');
+      });
     return user as UserWithTenantsAndRoles | undefined;
   }
 

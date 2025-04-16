@@ -4,6 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
+import { RoleModel } from '@modules/roles/models/role.model';
+import { RoleType } from '@modules/users/role.enum';
 import { UserRepository } from '@modules/users/users.repository';
 import { UsersService } from '@modules/users/users.service';
 
@@ -36,6 +39,11 @@ describe('AuthService', () => {
     getUserWithTenantsAndRoles: jest.fn(),
   };
 
+  const mockRoleCacheService = {
+    getRolePermissions: jest.fn(),
+    cacheUserRoles: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -56,6 +64,10 @@ describe('AuthService', () => {
           provide: UsersService,
           useValue: mockUsersService,
         },
+        {
+          provide: RoleCacheService,
+          useValue: mockRoleCacheService,
+        },
       ],
     }).compile();
 
@@ -64,6 +76,7 @@ describe('AuthService', () => {
     passwordService = module.get<PasswordService>(PasswordService);
     jwtService = module.get<JwtService>(JwtService);
     usersService = module.get<UsersService>(UsersService);
+
     jest.clearAllMocks();
   });
 
@@ -71,6 +84,7 @@ describe('AuthService', () => {
     const signInDto: SignInDto = {
       email: faker.internet.email(),
       password: faker.internet.password(),
+      tenantId: faker.number.int(),
     };
 
     it('should throw UnauthorizedException if user is not found', async () => {
@@ -105,7 +119,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('should return tokens if credentials are valid', async () => {
+    it('should return tokens and cache roles if credentials are valid', async () => {
       const mockUser = {
         id: faker.number.int(),
         email: signInDto.email,
@@ -113,7 +127,10 @@ describe('AuthService', () => {
       };
       const mockUserWithRoles = {
         ...mockUser,
-        roles: [{ name: 'USER', type: 'APP' }],
+        roles: [
+          { name: 'ADMIN', type: RoleType.GLOBAL },
+          { name: 'USER', type: RoleType.TENANT, tenantId: signInDto.tenantId },
+        ] as RoleModel[],
       };
       const mockTokens: InternalTokens = {
         accessToken: faker.string.alphanumeric(32),
@@ -140,17 +157,31 @@ describe('AuthService', () => {
         mockUser.id,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledTimes(2);
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
+        userId: mockUser.id,
+        payload: { roles: ['ADMIN'] },
+      });
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
+        userId: mockUser.id,
+        payload: { roles: ['USER'] },
+        tenantId: signInDto.tenantId,
+      });
     });
   });
 
   describe('refreshTokens', () => {
-    it('should generate new tokens', async () => {
+    it('should generate new tokens and cache roles', async () => {
       const userId = faker.number.int();
       const email = faker.internet.email();
+      const tenantId = faker.number.int();
       const mockUserWithRoles = {
         id: userId,
         email,
-        roles: [{ name: 'USER', type: 'APP' }],
+        roles: [
+          { name: 'ADMIN', type: RoleType.GLOBAL },
+          { name: 'USER', type: RoleType.TENANT, tenantId },
+        ] as RoleModel[],
       };
       const mockTokens: InternalTokens = {
         accessToken: faker.string.alphanumeric(32),
@@ -162,12 +193,22 @@ describe('AuthService', () => {
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.accessToken);
       mockJwtService.signAsync.mockResolvedValueOnce(mockTokens.refreshToken);
 
-      const result = await service.refreshTokens(userId, email);
+      const result = await service.refreshTokens(userId, email, tenantId);
       expect(result).toEqual(mockTokens);
       expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(
         userId,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledTimes(2);
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
+        userId,
+        payload: { roles: ['ADMIN'] },
+      });
+      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
+        userId,
+        payload: { roles: ['USER'] },
+        tenantId,
+      });
     });
   });
 
@@ -177,7 +218,7 @@ describe('AuthService', () => {
       const mockPayload: JwtPayload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        tenantId: faker.string.uuid(),
+        tenantId: faker.number.int(),
       };
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
 

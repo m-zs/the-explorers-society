@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
+import { RedisModule } from '@core/redis/redis.module';
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
 import { UsersModule } from '@modules/users/users.module';
 
 import { AuthController } from './auth.controller';
@@ -11,6 +13,7 @@ import { AuthService } from './auth.service';
 @Module({
   imports: [
     UsersModule,
+    RedisModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -33,6 +36,6 @@ import { AuthService } from './auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService],
+  providers: [AuthService, PasswordService, RoleCacheService],
 })
 export class AuthModule {}

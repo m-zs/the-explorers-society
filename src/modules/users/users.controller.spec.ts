@@ -3,10 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
+import { RoleType } from '@modules/users/role.enum';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserModel } from './models/user.model';
+import { UserWithTenantsAndRoles } from './types/user.types';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -54,9 +56,13 @@ const generateMockUserWithTenantsAndRoles = (id?: number) => {
     const role = new RoleModel();
     role.id = faker.number.int({ min: 1, max: 1000 });
     role.name = faker.person.jobTitle();
-    return role;
+    role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
+    return {
+      ...role,
+      tenantId: faker.number.int({ min: 1, max: 1000 }),
+    };
   });
-  return { ...user, tenants, roles };
+  return { ...user, tenants, roles } as UserWithTenantsAndRoles;
 };
 
 describe('UsersController', () => {

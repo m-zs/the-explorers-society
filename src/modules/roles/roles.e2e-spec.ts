@@ -18,6 +18,7 @@ describe('RolesController (e2e)', () => {
   let app: INestApplication;
   let server: App;
   let createdRoleId: number;
+  const tenantId = faker.number.int();
 
   beforeAll(async () => {
     execSync('cross-env NODE_ENV=test knex migrate:rollback --all', {
@@ -47,7 +48,10 @@ describe('RolesController (e2e)', () => {
         type: RoleType.GLOBAL,
       };
 
-      const response = await request(server).post('/roles').send(roleData);
+      const response = await request(server)
+        .post('/roles')
+        .set('x-tenant-id', tenantId.toString())
+        .send(roleData);
       const typedResponse = getTypedResponse<RoleModel>(response);
 
       expect(response.status).toBe(HttpStatus.CREATED);
@@ -63,6 +67,7 @@ describe('RolesController (e2e)', () => {
 
       await request(server)
         .post('/roles')
+        .set('x-tenant-id', tenantId.toString())
         .send(invalidData)
         .expect(HttpStatus.BAD_REQUEST);
     });
@@ -72,6 +77,7 @@ describe('RolesController (e2e)', () => {
 
       await request(server)
         .post('/roles')
+        .set('x-tenant-id', tenantId.toString())
         .send(invalidData)
         .expect(HttpStatus.BAD_REQUEST);
     });
@@ -84,6 +90,7 @@ describe('RolesController (e2e)', () => {
 
       await request(server)
         .post('/roles')
+        .set('x-tenant-id', tenantId.toString())
         .send(invalidData)
         .expect(HttpStatus.BAD_REQUEST);
     });
@@ -91,7 +98,9 @@ describe('RolesController (e2e)', () => {
 
   describe('GET /roles', () => {
     it('should return all roles', async () => {
-      const response = await request(server).get('/roles');
+      const response = await request(server)
+        .get('/roles')
+        .set('x-tenant-id', tenantId.toString());
       const typedResponse = getTypedResponse<RoleModel[]>(response);
 
       expect(response.status).toBe(HttpStatus.OK);
@@ -102,7 +111,9 @@ describe('RolesController (e2e)', () => {
 
   describe('GET /roles/:id', () => {
     it('should return a role by ID', async () => {
-      const response = await request(server).get(`/roles/${createdRoleId}`);
+      const response = await request(server)
+        .get(`/roles/${createdRoleId}`)
+        .set('x-tenant-id', tenantId.toString());
       const typedResponse = getTypedResponse<RoleModel>(response);
 
       expect(response.status).toBe(HttpStatus.OK);
@@ -111,12 +122,16 @@ describe('RolesController (e2e)', () => {
     });
 
     it('should return 404 if role not found', async () => {
-      await request(server).get('/roles/9999').expect(HttpStatus.NOT_FOUND);
+      await request(server)
+        .get('/roles/9999')
+        .set('x-tenant-id', tenantId.toString())
+        .expect(HttpStatus.NOT_FOUND);
     });
 
     it('should return 400 if the ID is not a valid number', async () => {
       await request(server)
         .get('/roles/invalid-id')
+        .set('x-tenant-id', tenantId.toString())
         .expect(HttpStatus.BAD_REQUEST);
     });
   });
@@ -127,6 +142,7 @@ describe('RolesController (e2e)', () => {
 
       const response = await request(server)
         .patch(`/roles/${createdRoleId}`)
+        .set('x-tenant-id', tenantId.toString())
         .send(updateData);
       const typedResponse = getTypedResponse<RoleModel>(response);
 
@@ -138,6 +154,7 @@ describe('RolesController (e2e)', () => {
     it('should return 404 if role not found', async () => {
       await request(server)
         .patch('/roles/9999')
+        .set('x-tenant-id', tenantId.toString())
         .send({ name: 'Nonexistent Role' })
         .expect(HttpStatus.NOT_FOUND);
     });
@@ -147,6 +164,7 @@ describe('RolesController (e2e)', () => {
 
       await request(server)
         .patch(`/roles/${createdRoleId}`)
+        .set('x-tenant-id', tenantId.toString())
         .send(invalidUpdateData)
         .expect(HttpStatus.BAD_REQUEST);
     });
@@ -154,9 +172,9 @@ describe('RolesController (e2e)', () => {
 
   describe('GET /roles/:id/users', () => {
     it('should return users with a specific role', async () => {
-      const response = await request(server).get(
-        `/roles/${createdRoleId}/users`,
-      );
+      const response = await request(server)
+        .get(`/roles/${createdRoleId}/users`)
+        .set('x-tenant-id', tenantId.toString());
       const typedResponse = getTypedResponse<RoleModel>(response);
 
       expect(response.status).toBe(HttpStatus.OK);
@@ -166,6 +184,7 @@ describe('RolesController (e2e)', () => {
     it('should return 404 if role not found', async () => {
       await request(server)
         .get('/roles/9999/users')
+        .set('x-tenant-id', tenantId.toString())
         .expect(HttpStatus.NOT_FOUND);
     });
   });
@@ -174,20 +193,26 @@ describe('RolesController (e2e)', () => {
     it('should delete a role', async () => {
       await request(server)
         .delete(`/roles/${createdRoleId}`)
+        .set('x-tenant-id', tenantId.toString())
         .expect(HttpStatus.NO_CONTENT);
 
       await request(server)
         .get(`/roles/${createdRoleId}`)
+        .set('x-tenant-id', tenantId.toString())
         .expect(HttpStatus.NOT_FOUND);
     });
 
     it('should return 404 if role not found', async () => {
-      await request(server).delete('/roles/9999').expect(HttpStatus.NOT_FOUND);
+      await request(server)
+        .delete('/roles/9999')
+        .set('x-tenant-id', tenantId.toString())
+        .expect(HttpStatus.NOT_FOUND);
     });
 
     it('should return 400 if ID is invalid', async () => {
       await request(server)
         .delete('/roles/invalid-id')
+        .set('x-tenant-id', tenantId.toString())
         .expect(HttpStatus.BAD_REQUEST);
     });
   });

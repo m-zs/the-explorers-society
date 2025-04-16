@@ -9,12 +9,19 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
 
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
+
 import { AuthGuard } from './auth.guard';
 import { AppRole } from '../enums/app-role.enum';
 
 describe('AuthGuard', () => {
   let guard: CanActivate;
   let jwtService: JwtService;
+  let roleCacheService: RoleCacheService;
+
+  const mockRoleCacheService = {
+    getCachedRoles: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,12 +32,17 @@ describe('AuthGuard', () => {
             verifyAsync: jest.fn(),
           },
         },
+        {
+          provide: RoleCacheService,
+          useValue: mockRoleCacheService,
+        },
       ],
     }).compile();
 
     jwtService = module.get<JwtService>(JwtService);
+    roleCacheService = module.get<RoleCacheService>(RoleCacheService);
     const GuardClass = AuthGuard([AppRole.ADMIN]);
-    guard = new GuardClass(jwtService);
+    guard = new GuardClass(jwtService, roleCacheService);
   });
 
   it('should be defined', () => {
@@ -93,8 +105,7 @@ describe('AuthGuard', () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        roles: [AppRole.USER],
-        tenantRoles: [],
+        tenantId: faker.number.int(),
       };
       const validToken = faker.string.alphanumeric(32);
       const context = {
@@ -108,9 +119,13 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+        roles: [AppRole.USER],
+        tenantRoles: {},
+      });
 
       const NoRolesGuardClass = AuthGuard();
-      const noRolesGuard = new NoRolesGuardClass(jwtService);
+      const noRolesGuard = new NoRolesGuardClass(jwtService, roleCacheService);
       const result = await noRolesGuard.canActivate(context);
       expect(result).toBe(true);
     });
@@ -119,8 +134,7 @@ describe('AuthGuard', () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        roles: [AppRole.ADMIN],
-        tenantRoles: [],
+        tenantId: faker.number.int(),
       };
       const validToken = faker.string.alphanumeric(32);
       const context = {
@@ -134,6 +148,10 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+        roles: [AppRole.ADMIN],
+        tenantRoles: {},
+      });
 
       const result = await guard.canActivate(context);
       expect(result).toBe(true);
@@ -143,8 +161,7 @@ describe('AuthGuard', () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        roles: [AppRole.SUPPORT],
-        tenantRoles: [],
+        tenantId: faker.number.int(),
       };
       const validToken = faker.string.alphanumeric(32);
       const context = {
@@ -158,12 +175,19 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+        roles: [AppRole.SUPPORT],
+        tenantRoles: {},
+      });
 
       const MultipleRolesGuardClass = AuthGuard([
         AppRole.ADMIN,
         AppRole.SUPPORT,
       ]);
-      const multipleRolesGuard = new MultipleRolesGuardClass(jwtService);
+      const multipleRolesGuard = new MultipleRolesGuardClass(
+        jwtService,
+        roleCacheService,
+      );
       const result = await multipleRolesGuard.canActivate(context);
       expect(result).toBe(true);
     });
@@ -172,8 +196,7 @@ describe('AuthGuard', () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        roles: [AppRole.USER],
-        tenantRoles: [],
+        tenantId: faker.number.int(),
       };
       const validToken = faker.string.alphanumeric(32);
       const context = {
@@ -187,6 +210,10 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+        roles: [AppRole.USER],
+        tenantRoles: {},
+      });
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         ForbiddenException,
@@ -197,8 +224,7 @@ describe('AuthGuard', () => {
       const payload = {
         sub: faker.string.uuid(),
         email: faker.internet.email(),
-        roles: [AppRole.USER],
-        tenantRoles: [],
+        tenantId: faker.number.int(),
       };
       const validToken = faker.string.alphanumeric(32);
       const request = {
@@ -214,11 +240,17 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+        roles: [AppRole.USER],
+      });
 
       const NoRolesGuardClass = AuthGuard();
-      const noRolesGuard = new NoRolesGuardClass(jwtService);
+      const noRolesGuard = new NoRolesGuardClass(jwtService, roleCacheService);
       await noRolesGuard.canActivate(context);
-      expect(request['user']).toEqual(payload);
+      expect(request['user']).toEqual({
+        ...payload,
+        roles: [AppRole.USER],
+      });
     });
   });
 });
