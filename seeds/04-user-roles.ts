@@ -17,6 +17,7 @@ import { RoleType } from '@modules/users/role.enum';
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('tenant_roles').del();
+  await knex('tenant_users').del();
 
   const passwordService = new PasswordService(new ConfigService());
 
@@ -65,6 +66,14 @@ export async function seed(knex: Knex): Promise<void> {
       },
     ])
     .returning('*');
+
+  // Assign users to test tenant
+  for (const user of testUsers) {
+    await knex('tenant_users').insert({
+      tenant_id: testTenant.id,
+      user_id: user.id,
+    });
+  }
 
   // Assign global USER role to all test users (with tenant_id as NULL)
   for (const user of testUsers) {
