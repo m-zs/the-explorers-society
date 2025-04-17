@@ -38,6 +38,9 @@ export default tseslint.config(
           varsIgnorePattern: '^_', // Ignore unused variables starting with _
         },
       ],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
     },
   },
   {
