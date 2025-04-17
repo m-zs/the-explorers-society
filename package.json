@@ -34,6 +34,7 @@
     ]
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.2",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
@@ -46,6 +47,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/passport-jwt": "^4.0.1",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.49.1",
     "cache-manager": "^6.4.2",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
