@@ -98,16 +98,6 @@ describe('AuthController (e2e)', () => {
       expect(response.headers['set-cookie'][0]).toMatch(
         new RegExp(`${REFRESH_TOKEN_COOKIE_NAME}=`),
       );
-
-      // Store the refresh token for subsequent tests
-      const cookies = response.headers['set-cookie'] as unknown as string[];
-      const refreshTokenCookie = cookies.find((cookie) =>
-        cookie.startsWith(`${REFRESH_TOKEN_COOKIE_NAME}=`),
-      );
-
-      if (refreshTokenCookie) {
-        refreshToken = refreshTokenCookie.split(';')[0].split('=')[1];
-      }
     });
 
     it('should log in with user credentials', async () => {
