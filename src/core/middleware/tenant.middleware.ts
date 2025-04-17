@@ -9,7 +9,7 @@ import { Request, Response, NextFunction } from 'express';
 export class TenantMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Try to get tenant ID from various sources
-    const tenantId = req.headers['x-tenant-id'];
+    const tenantId = req.headers?.['x-tenant-id'];
 
     if (!tenantId || isNaN(+tenantId)) {
       throw new BadRequestException('Tenant ID is required');
