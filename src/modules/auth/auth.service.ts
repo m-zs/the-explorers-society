@@ -3,13 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 
 import { PasswordService } from '@core/services/password/password.service';
 import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
-import { RoleModel } from '@modules/roles/models/role.model';
-import { RoleType } from '@modules/users/role.enum';
 import { UserRepository } from '@modules/users/users.repository';
 import { UsersService } from '@modules/users/users.service';
 
 import { SignInDto } from './dto/sign-in.dto';
-import { AppRole } from './enums/app-role.enum';
 import { InternalTokens } from './interfaces/internal-tokens.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
@@ -77,12 +74,12 @@ export class AuthService {
     if (!userWithRoles) {
       throw new UnauthorizedException('User not found');
     }
-    // Extract roles and tenant roles
-    const userRoles = userWithRoles.roles || [];
 
-    const roles: AppRole[] = userRoles
-      .filter((role: RoleModel) => role.type === RoleType.GLOBAL)
-      .map((role: RoleModel) => role.name as AppRole);
+    // Cache user roles
+    await this.roleCacheService.cacheUserRolesForAuthentication(
+      userId,
+      userWithRoles.roles,
+    );
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -97,37 +94,6 @@ export class AuthService {
         { sub: userId, email, tenantId },
         { secret: process.env.JWT_REFRESH_SECRET },
       ),
-    ]);
-
-    const tenantRoles = userWithRoles.roles.reduce(
-      (acc, role) => {
-        if (role.type === RoleType.TENANT) {
-          if (!acc[role.tenantId]) {
-            acc[role.tenantId] = [];
-          }
-          acc[role.tenantId].push(role.name);
-        }
-        return acc;
-      },
-      {} as Record<number, string[]>,
-    );
-
-    await Promise.all([
-      ...Object.entries(tenantRoles).map(([tenantId, roles]) => {
-        return this.roleCacheService.cacheUserRoles({
-          userId,
-          payload: {
-            roles,
-          },
-          tenantId: +tenantId,
-        });
-      }),
-      this.roleCacheService.cacheUserRoles({
-        userId,
-        payload: {
-          roles,
-        },
-      }),
     ]);
 
     return {

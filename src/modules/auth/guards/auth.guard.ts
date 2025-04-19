@@ -39,7 +39,9 @@ export const AuthGuard = (requiredRoles?: AppRole[]) => {
         throw new UnauthorizedException('Invalid token');
       }
 
-      const roleData = await this.roleCacheService.getCachedRoles(+payload.sub);
+      const roleData = await this.roleCacheService.getUserCachedRoles(
+        +payload.sub,
+      );
 
       request.user = {
         ...payload,

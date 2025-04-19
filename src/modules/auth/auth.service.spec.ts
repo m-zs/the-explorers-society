@@ -40,8 +40,7 @@ describe('AuthService', () => {
   };
 
   const mockRoleCacheService = {
-    getRolePermissions: jest.fn(),
-    cacheUserRoles: jest.fn(),
+    cacheUserRolesForAuthentication: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -157,16 +156,9 @@ describe('AuthService', () => {
         mockUser.id,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledTimes(2);
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
-        userId: mockUser.id,
-        payload: { roles: ['ADMIN'] },
-      });
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
-        userId: mockUser.id,
-        payload: { roles: ['USER'] },
-        tenantId: signInDto.tenantId,
-      });
+      expect(
+        mockRoleCacheService.cacheUserRolesForAuthentication,
+      ).toHaveBeenCalledWith(mockUser.id, mockUserWithRoles.roles);
     });
   });
 
@@ -199,16 +191,9 @@ describe('AuthService', () => {
         userId,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledTimes(2);
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
-        userId,
-        payload: { roles: ['ADMIN'] },
-      });
-      expect(mockRoleCacheService.cacheUserRoles).toHaveBeenCalledWith({
-        userId,
-        payload: { roles: ['USER'] },
-        tenantId,
-      });
+      expect(
+        mockRoleCacheService.cacheUserRolesForAuthentication,
+      ).toHaveBeenCalledWith(userId, mockUserWithRoles.roles);
     });
   });
 

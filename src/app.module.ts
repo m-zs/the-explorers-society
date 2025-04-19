@@ -1,10 +1,11 @@
+import { BullModule } from '@nestjs/bullmq';
 import {
   MiddlewareConsumer,
   Module,
   NestModule,
   ValidationPipe,
 } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 
@@ -13,6 +14,7 @@ import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-e
 import { LogService } from '@core/logging/log.service';
 import { RedisModule } from '@core/redis/redis.module';
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleCacheProcessor } from '@core/services/role-cache/role-cache.processor';
 import { exceptionFactory } from '@core/validation/exception.factory';
 
 import { AppController } from './app.controller';
@@ -30,6 +32,18 @@ import { UsersModule } from './modules/users/users.module';
       isGlobal: true,
       envFilePath: env,
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    { global: true, module: RoleCacheProcessor },
     DatabaseModule,
     RedisModule,
     TenantsModule,

@@ -28,7 +28,7 @@ export const TenantAuthGuard = (roles?: TenantRole[]) => {
         throw new UnauthorizedException('User not authenticated');
       }
 
-      const roleData = await this.roleCacheService.getCachedRoles(
+      const roleData = await this.roleCacheService.getUserCachedRoles(
         +request.user.sub,
         request.tenantId,
       );
