@@ -18,7 +18,7 @@ describe('TenantAuthGuard', () => {
 
   beforeEach(() => {
     roleCacheService = {
-      getCachedRoles: jest.fn().mockResolvedValue({
+      getUserCachedRoles: jest.fn().mockResolvedValue({
         roles: [TenantRole.ADMIN],
       }),
     } as unknown as RoleCacheService;
@@ -94,7 +94,7 @@ describe('TenantAuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      (roleCacheService.getCachedRoles as jest.Mock).mockResolvedValueOnce(
+      (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce(
         null,
       );
 
@@ -122,7 +122,7 @@ describe('TenantAuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      (roleCacheService.getCachedRoles as jest.Mock).mockResolvedValueOnce({
+      (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
         roles: [TenantRole.USER],
       });
 
@@ -150,7 +150,7 @@ describe('TenantAuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      (roleCacheService.getCachedRoles as jest.Mock).mockResolvedValueOnce({
+      (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
         roles: [TenantRole.ADMIN],
       });
 
@@ -177,7 +177,7 @@ describe('TenantAuthGuard', () => {
         }),
       } as ExecutionContext;
 
-      (roleCacheService.getCachedRoles as jest.Mock).mockResolvedValueOnce({
+      (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
         roles: [TenantRole.SUPPORT],
       });
 

@@ -20,7 +20,7 @@ describe('AuthGuard', () => {
   let roleCacheService: RoleCacheService;
 
   const mockRoleCacheService = {
-    getCachedRoles: jest.fn(),
+    getUserCachedRoles: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -119,7 +119,7 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
-      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+      mockRoleCacheService.getUserCachedRoles.mockResolvedValueOnce({
         roles: [AppRole.USER],
         tenantRoles: {},
       });
@@ -148,7 +148,7 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
-      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+      mockRoleCacheService.getUserCachedRoles.mockResolvedValueOnce({
         roles: [AppRole.ADMIN],
         tenantRoles: {},
       });
@@ -175,7 +175,7 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
-      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+      mockRoleCacheService.getUserCachedRoles.mockResolvedValueOnce({
         roles: [AppRole.SUPPORT],
         tenantRoles: {},
       });
@@ -210,7 +210,7 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
-      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+      mockRoleCacheService.getUserCachedRoles.mockResolvedValueOnce({
         roles: [AppRole.USER],
         tenantRoles: {},
       });
@@ -240,7 +240,7 @@ describe('AuthGuard', () => {
       } as ExecutionContext;
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
-      mockRoleCacheService.getCachedRoles.mockResolvedValueOnce({
+      mockRoleCacheService.getUserCachedRoles.mockResolvedValueOnce({
         roles: [AppRole.USER],
       });
 
