@@ -9,7 +9,7 @@ import {
 import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
 
 import { TenantAuthGuard } from './tenant-auth.guard';
-import { TenantRole } from '../enums/tenant-role.enum';
+import { AppRole } from '../enums/app-role.enum';
 import { RequestWithUser } from '../interfaces/request-with-user.interface';
 
 describe('TenantAuthGuard', () => {
@@ -19,10 +19,10 @@ describe('TenantAuthGuard', () => {
   beforeEach(() => {
     roleCacheService = {
       getUserCachedRoles: jest.fn().mockResolvedValue({
-        roles: [TenantRole.ADMIN],
+        roles: [AppRole.ADMIN],
       }),
     } as unknown as RoleCacheService;
-    const GuardClass = TenantAuthGuard([TenantRole.ADMIN]);
+    const GuardClass = TenantAuthGuard([AppRole.ADMIN]);
     guard = new GuardClass(roleCacheService);
   });
 
@@ -123,7 +123,7 @@ describe('TenantAuthGuard', () => {
       } as ExecutionContext;
 
       (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
-        roles: [TenantRole.USER],
+        roles: [AppRole.USER],
       });
 
       await expect(guard.canActivate(context)).rejects.toThrow(
@@ -151,7 +151,7 @@ describe('TenantAuthGuard', () => {
       } as ExecutionContext;
 
       (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
-        roles: [TenantRole.ADMIN],
+        roles: [AppRole.ADMIN],
       });
 
       const result = await guard.canActivate(context);
@@ -178,12 +178,12 @@ describe('TenantAuthGuard', () => {
       } as ExecutionContext;
 
       (roleCacheService.getUserCachedRoles as jest.Mock).mockResolvedValueOnce({
-        roles: [TenantRole.SUPPORT],
+        roles: [AppRole.SUPPORT],
       });
 
       const MultipleRolesGuardClass = TenantAuthGuard([
-        TenantRole.ADMIN,
-        TenantRole.SUPPORT,
+        AppRole.ADMIN,
+        AppRole.SUPPORT,
       ]);
       const multipleRolesGuard = new MultipleRolesGuardClass(roleCacheService);
       const result = await multipleRolesGuard.canActivate(context);

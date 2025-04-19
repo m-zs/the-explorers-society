@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
+
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleModel } from './models/role.model';
@@ -56,7 +58,7 @@ export class RolesController {
     type: RoleModel,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<RoleModel> {
+  async findOne(@Param('id', ParseIntPipe) id: AppRole): Promise<RoleModel> {
     return await this.rolesService.findOne(id);
   }
 
@@ -71,7 +73,7 @@ export class RolesController {
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id: AppRole,
     @Body() updateRoleDto: UpdateRoleDto,
   ): Promise<RoleModel> {
     return await this.rolesService.update(id, updateRoleDto);
@@ -83,7 +85,7 @@ export class RolesController {
   @ApiParam({ name: 'id', type: Number, description: 'Role ID' })
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Role deleted' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<number> {
+  async remove(@Param('id', ParseIntPipe) id: AppRole): Promise<AppRole> {
     return await this.rolesService.remove(id);
   }
 
@@ -98,7 +100,7 @@ export class RolesController {
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Role not found' })
   async getUsersWithRoleId(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id: AppRole,
   ): Promise<RoleModel> {
     return await this.rolesService.getUsersWithRoleId(id);
   }

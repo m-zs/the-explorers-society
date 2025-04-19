@@ -9,10 +9,10 @@ import {
 
 import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
 
-import { TenantRole } from '../enums/tenant-role.enum';
+import { AppRole } from '../enums/app-role.enum';
 import { RequestWithUser } from '../interfaces/request-with-user.interface';
 
-export const TenantAuthGuard = (roles?: TenantRole[]) => {
+export const TenantAuthGuard = (roles?: AppRole[]) => {
   @Injectable()
   class TenantAuthGuardMixin implements CanActivate {
     constructor(public roleCacheService: RoleCacheService) {}
@@ -35,7 +35,7 @@ export const TenantAuthGuard = (roles?: TenantRole[]) => {
 
       request.user = {
         ...request.user,
-        tenantRoles: roleData?.roles as TenantRole[] | undefined,
+        tenantRoles: roleData?.roles,
       };
 
       if (!request.user.tenantRoles) {

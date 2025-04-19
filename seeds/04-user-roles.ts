@@ -9,11 +9,9 @@ import {
 } from '@/test/data/users';
 import { PasswordService } from '@core/services/password/password.service';
 import { AppRole } from '@modules/auth/enums/app-role.enum';
-import { TenantRole } from '@modules/auth/enums/tenant-role.enum';
 import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
 import { UserModel } from '@modules/users/models/user.model';
-import { RoleType } from '@modules/users/role.enum';
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('tenant_roles').del();
@@ -23,9 +21,6 @@ export async function seed(knex: Knex): Promise<void> {
 
   // Get all roles
   const roles = await knex<RoleModel>('roles').select('*');
-  const globalUserRole = roles.find(
-    (r) => r.name === (AppRole.USER as string) && r.type === RoleType.GLOBAL,
-  );
 
   // Create test tenant
   const [testTenant] = await knex<TenantModel>('tenants')
@@ -35,17 +30,9 @@ export async function seed(knex: Knex): Promise<void> {
     })
     .returning('*');
 
-  const tenantAdminRole = roles.find(
-    (r) =>
-      r.name === (TenantRole.ADMIN as string) && r.type === RoleType.TENANT,
-  );
-  const tenantSupportRole = roles.find(
-    (r) =>
-      r.name === (TenantRole.SUPPORT as string) && r.type === RoleType.TENANT,
-  );
-  const tenantUserRole = roles.find(
-    (r) => r.name === (TenantRole.USER as string) && r.type === RoleType.TENANT,
-  );
+  const adminRole = roles.find((r) => r.id === AppRole.ADMIN);
+  const supportRole = roles.find((r) => r.id === AppRole.SUPPORT);
+  const userRole = roles.find((r) => r.id === AppRole.USER);
 
   // Create test users for the test tenant
   const testUsers = await knex<UserModel>('users')
@@ -77,10 +64,10 @@ export async function seed(knex: Knex): Promise<void> {
 
   // Assign global USER role to all test users (with tenant_id as NULL)
   for (const user of testUsers) {
-    if (globalUserRole) {
+    if (userRole) {
       await knex('tenant_roles').insert({
         user_id: user.id,
-        role_id: globalUserRole.id,
+        role_id: userRole.id,
         tenant_id: null, // Global role
       });
     }
@@ -88,27 +75,27 @@ export async function seed(knex: Knex): Promise<void> {
 
   if (testTenant) {
     // Assign tenant admin role
-    if (tenantAdminRole) {
+    if (adminRole) {
       await knex('tenant_roles').insert({
         tenant_id: testTenant.id,
         user_id: testUsers[0].id, // testTenantAdmin
-        role_id: tenantAdminRole.id,
+        role_id: adminRole.id,
       });
     }
 
-    if (tenantSupportRole) {
+    if (supportRole) {
       await knex('tenant_roles').insert({
         tenant_id: testTenant.id,
         user_id: testUsers[1].id, // testTenantSupport
-        role_id: tenantSupportRole.id,
+        role_id: supportRole.id,
       });
     }
 
-    if (tenantUserRole) {
+    if (userRole) {
       await knex('tenant_roles').insert({
         tenant_id: testTenant.id,
         user_id: testUsers[2].id, // testTenantUser
-        role_id: tenantUserRole.id,
+        role_id: userRole.id,
       });
     }
   }

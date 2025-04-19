@@ -19,7 +19,6 @@ import {
 import { SignInDto } from './dto/sign-in.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { AppRole } from './enums/app-role.enum';
-import { TenantRole } from './enums/tenant-role.enum';
 import { AuthGuard } from './guards/auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { TenantAuthGuard } from './guards/tenant-auth.guard';
@@ -122,7 +121,7 @@ export class AuthController {
     status: HttpStatus.FORBIDDEN,
     description: 'Invalid access level',
   })
-  @UseGuards(AuthGuard([AppRole.USER]), TenantAuthGuard([TenantRole.SUPPORT]))
+  @UseGuards(AuthGuard([AppRole.USER]), TenantAuthGuard([AppRole.SUPPORT]))
   test() {
     return;
   }

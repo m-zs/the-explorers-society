@@ -1,5 +1,3 @@
 import { Model } from 'objection';
 
-export class BaseModel extends Model {
-  readonly id: number;
-}
+export class BaseModel extends Model {}

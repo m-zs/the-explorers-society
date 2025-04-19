@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ModelClass } from 'objection';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
+
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleModel } from './models/role.model';
@@ -21,22 +23,23 @@ export class RoleRepository {
     return this.modelClass.query();
   }
 
-  async getRoleById(id: number): Promise<RoleModel | undefined> {
+  async getRoleById(id: AppRole): Promise<RoleModel | undefined> {
     return this.modelClass.query().findById(id);
   }
 
   async updateRole(
-    id: number,
+    id: AppRole,
     data: UpdateRoleDto,
   ): Promise<RoleModel | undefined> {
     return this.modelClass.query().patchAndFetchById(id, data);
   }
 
-  async removeRole(id: number): Promise<number> {
-    return this.modelClass.query().deleteById(id);
+  async removeRole(id: AppRole): Promise<AppRole> {
+    await this.modelClass.query().deleteById(id);
+    return id;
   }
 
-  async getUsersWithRoleId(id: number): Promise<RoleModel | undefined> {
+  async getUsersWithRoleId(id: AppRole): Promise<RoleModel | undefined> {
     return this.modelClass.query().findById(id).withGraphFetched('users');
   }
 }

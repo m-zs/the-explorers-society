@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
 import { RoleType } from '@modules/users/role.enum';
 
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -10,9 +11,9 @@ import { RoleModel } from './models/role.model';
 import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
 
-const generateMockRole = (id?: number): RoleModel => {
+const generateMockRole = (id?: AppRole): RoleModel => {
   const role = new RoleModel();
-  role.id = id || faker.number.int({ min: 1, max: 1000 });
+  role.id = id || faker.helpers.arrayElement(Object.values(AppRole));
   role.name = faker.word.noun();
   role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
   return role;
@@ -70,7 +71,7 @@ describe('RolesController', () => {
 
   describe('findOne', () => {
     it('should return a role by ID', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
       const mockedRole = generateMockRole(id);
 
       jest.spyOn(rolesService, 'findOne').mockResolvedValueOnce(mockedRole);
@@ -81,7 +82,7 @@ describe('RolesController', () => {
     });
 
     it('should throw NotFoundException if role is not found', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       try {
         await controller.findOne(id);
@@ -99,7 +100,7 @@ describe('RolesController', () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.lorem.word(),
       };
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
       const expectedResult = generateMockRole(id);
 
       jest.spyOn(rolesService, 'update').mockResolvedValueOnce(expectedResult);
@@ -113,7 +114,7 @@ describe('RolesController', () => {
       const updateRoleDto: UpdateRoleDto = {
         name: faker.lorem.word(),
       };
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       try {
         await controller.update(id, updateRoleDto);
@@ -128,7 +129,7 @@ describe('RolesController', () => {
 
   describe('remove', () => {
     it('should remove a role and return the removed role ID', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest.spyOn(rolesService, 'remove').mockResolvedValueOnce(id);
 
@@ -138,7 +139,7 @@ describe('RolesController', () => {
     });
 
     it('should throw NotFoundException if role is not found', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       try {
         await controller.remove(id);
@@ -153,7 +154,7 @@ describe('RolesController', () => {
 
   describe('getUsersWithRoleId', () => {
     it('should return users with a specific role ID', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest
         .spyOn(rolesService, 'getUsersWithRoleId')
@@ -165,7 +166,7 @@ describe('RolesController', () => {
     });
 
     it('should throw NotFoundException if role is not found', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       try {
         await controller.getUsersWithRoleId(id);

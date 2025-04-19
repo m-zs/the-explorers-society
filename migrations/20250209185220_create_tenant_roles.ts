@@ -1,4 +1,7 @@
+import 'tsconfig-paths/register';
 import { Knex } from 'knex';
+
+import { AppRole } from '@modules/auth/enums/app-role.enum';
 
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('tenant_roles', (table) => {
@@ -18,8 +21,7 @@ export async function up(knex: Knex): Promise<void> {
       .inTable('users')
       .onDelete('CASCADE');
     table
-      .integer('role_id')
-      .unsigned()
+      .enum('role_id', Object.values(AppRole))
       .notNullable()
       .references('id')
       .inTable('roles')
