@@ -5,14 +5,13 @@ import { Queue } from 'bullmq';
 import { RedisService } from '@core/redis/redis.service';
 import { AppRole } from '@modules/auth/enums/app-role.enum';
 import { RoleModel } from '@modules/roles/models/role.model';
-import { RoleType } from '@modules/users/role.enum';
 
 import { CachedRole, RoleCachePayload } from './role-cache.interface';
 
 @Injectable()
 export class RoleCacheService {
   private readonly logger = new Logger(RoleCacheService.name);
-  private readonly TTL = 3600;
+  private readonly CACHE_TTL = 3600;
   private readonly USER_ROLES_PREFIX = 'user_roles';
   private readonly ROLE_USERS_PREFIX = 'role_users';
 
@@ -23,28 +22,32 @@ export class RoleCacheService {
   ) {}
 
   private mapUserRoles(roles: (RoleModel & { tenantId?: number })[]): {
-    globalRoles: string[];
-    tenantRoles: Record<number, string[]>;
+    globalRoles: AppRole[];
+    tenantRoles: Record<number, AppRole[]>;
   } {
     const userRoles = roles || [];
 
     // Map global roles
     const globalRoles = userRoles
-      .filter((role) => role.type === RoleType.GLOBAL)
-      .map((role) => role.name as AppRole);
+      .filter((role) => !role.tenantId || role.tenantId === null)
+      .map((role) => role.id);
 
     // Map tenant-specific roles
     const tenantRoles = userRoles.reduce(
       (acc, role) => {
-        if (role.type === RoleType.TENANT && role.tenantId) {
+        if (
+          role.tenantId !== undefined &&
+          role.tenantId !== null &&
+          !isNaN(role.tenantId)
+        ) {
           if (!acc[role.tenantId]) {
             acc[role.tenantId] = [];
           }
-          acc[role.tenantId].push(role.name);
+          acc[role.tenantId].push(role.id);
         }
         return acc;
       },
-      {} as Record<number, string[]>,
+      {} as Record<number, AppRole[]>,
     );
 
     return {
@@ -67,8 +70,11 @@ export class RoleCacheService {
     // Only update if we have roles to add
     if (payload.roles.length > 0) {
       // Update user -> roles mapping
-      await this.redisService.sadd(userRolesMappingKey, ...payload.roles);
-      await this.redisService.expire(userRolesMappingKey, this.TTL);
+      await this.redisService.sadd(
+        userRolesMappingKey,
+        ...payload.roles.map(String),
+      );
+      await this.redisService.expire(userRolesMappingKey, this.CACHE_TTL);
 
       // Update role -> users mapping
       await Promise.all(
@@ -123,19 +129,20 @@ export class RoleCacheService {
     }
 
     return {
-      roles,
+      roles: roles as AppRole[],
     };
   }
 
-  async getUsersByRole(role: string, tenantId?: number): Promise<number[]> {
+  async getUsersByRole(role: AppRole, tenantId?: number): Promise<number[]> {
     const roleUsersMappingKey = this.getRoleUsersMappingKey(role, tenantId);
     const userIds = await this.redisService.smembers(roleUsersMappingKey);
     return userIds.map(Number);
   }
 
-  async getRolesByUser(userId: number, tenantId?: number): Promise<string[]> {
+  async getRolesByUser(userId: number, tenantId?: number): Promise<AppRole[]> {
     const userRolesMappingKey = this.getUserRolesMappingKey(userId, tenantId);
-    return this.redisService.smembers(userRolesMappingKey);
+    const roles = await this.redisService.smembers(userRolesMappingKey);
+    return roles as AppRole[];
   }
 
   async invalidateUserRoles(userId: number, tenantId?: number): Promise<void> {
@@ -172,7 +179,7 @@ export class RoleCacheService {
     }
   }
 
-  async invalidateRole(role: string, tenantId?: number): Promise<void> {
+  async invalidateRole(role: AppRole, tenantId?: number): Promise<void> {
     const roleUsersMappingKey = this.getRoleUsersMappingKey(role, tenantId);
 
     try {
@@ -210,7 +217,7 @@ export class RoleCacheService {
     return `${this.USER_ROLES_PREFIX}:${userId}:${tenantId ?? 'global'}`;
   }
 
-  private getRoleUsersMappingKey(role: string, tenantId?: number): string {
+  private getRoleUsersMappingKey(role: AppRole, tenantId?: number): string {
     return `${this.ROLE_USERS_PREFIX}:${role}:${tenantId ?? 'global'}`;
   }
 }

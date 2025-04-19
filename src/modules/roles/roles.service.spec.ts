@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
 import { RoleType } from '@modules/users/role.enum';
 
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -9,13 +10,11 @@ import { RoleModel } from './models/role.model';
 import { RoleRepository } from './roles.repository';
 import { RolesService } from './roles.service';
 
-const generateMockRole = (id?: number): RoleModel => {
+const generateMockRole = (id?: AppRole): RoleModel => {
   const role = new RoleModel();
-
-  role.id = id || faker.number.int({ min: 1, max: 1000 });
+  role.id = id || faker.helpers.arrayElement(Object.values(AppRole));
   role.name = faker.word.noun();
   role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
-
   return role;
 };
 
@@ -24,7 +23,7 @@ describe('RolesService', () => {
   let roleRepository: RoleRepository;
 
   const mockRole = generateMockRole();
-  const mockRoles = Array.from({ length: 5 }, generateMockRole);
+  const mockRoles = Array.from({ length: 5 }, () => generateMockRole());
 
   const mockRoleRepository = {
     createRole: jest.fn().mockResolvedValue(mockRole),
@@ -71,7 +70,7 @@ describe('RolesService', () => {
 
   describe('findOne', () => {
     it('should return a single role by ID', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest.spyOn(roleRepository, 'getRoleById').mockResolvedValueOnce(mockRole);
 
@@ -87,7 +86,7 @@ describe('RolesService', () => {
         name: faker.word.noun(),
         type: faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]),
       };
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest.spyOn(roleRepository, 'updateRole').mockResolvedValueOnce(mockRole);
 
@@ -99,7 +98,7 @@ describe('RolesService', () => {
 
   describe('remove', () => {
     it('should remove a role and return the deleted role ID', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest.spyOn(roleRepository, 'removeRole').mockResolvedValueOnce(id);
 
@@ -111,7 +110,7 @@ describe('RolesService', () => {
 
   describe('getUsersWithRoleId', () => {
     it('should return users associated with the role', async () => {
-      const id = faker.number.int({ min: 1, max: 1000 });
+      const id = AppRole.ADMIN;
 
       jest
         .spyOn(roleRepository, 'getUsersWithRoleId')

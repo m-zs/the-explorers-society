@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
+
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleModel } from './models/role.model';
@@ -23,7 +25,7 @@ export class RolesService {
     return this.roleRepository.getAllRoles();
   }
 
-  async findOne(id: number): Promise<RoleModel> {
+  async findOne(id: AppRole): Promise<RoleModel> {
     const role = await this.roleRepository.getRoleById(id);
     if (!role) {
       throw new NotFoundException(`Role with ID ${id} not found`);
@@ -31,7 +33,7 @@ export class RolesService {
     return role;
   }
 
-  async update(id: number, updateRoleDto: UpdateRoleDto): Promise<RoleModel> {
+  async update(id: AppRole, updateRoleDto: UpdateRoleDto): Promise<RoleModel> {
     const role = await this.roleRepository.updateRole(id, updateRoleDto);
     if (!role) {
       throw new NotFoundException(`Role with ID ${id} not found`);
@@ -39,7 +41,7 @@ export class RolesService {
     return role;
   }
 
-  async remove(id: number): Promise<number> {
+  async remove(id: AppRole): Promise<AppRole> {
     const deleted = await this.roleRepository.removeRole(id);
     if (!deleted) {
       throw new NotFoundException(`Role with ID ${id} not found`);
@@ -47,7 +49,7 @@ export class RolesService {
     return deleted;
   }
 
-  async getUsersWithRoleId(id: number): Promise<RoleModel> {
+  async getUsersWithRoleId(id: AppRole): Promise<RoleModel> {
     const role = await this.roleRepository.getUsersWithRoleId(id);
     if (!role) {
       throw new NotFoundException(`Role with ID ${id} not found`);

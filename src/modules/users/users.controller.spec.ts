@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
 import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
 import { RoleType } from '@modules/users/role.enum';
@@ -37,7 +38,7 @@ const generateMockUserWithRoles = (id?: number) => {
   const user = generateMockUser(id);
   const roles = Array.from({ length: 2 }, () => {
     const role = new RoleModel();
-    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.id = faker.helpers.arrayElement(Object.values(AppRole));
     role.name = faker.person.jobTitle();
     return role;
   });
@@ -54,7 +55,7 @@ const generateMockUserWithTenantsAndRoles = (id?: number) => {
   });
   const roles = Array.from({ length: 2 }, () => {
     const role = new RoleModel();
-    role.id = faker.number.int({ min: 1, max: 1000 });
+    role.id = faker.helpers.arrayElement(Object.values(AppRole));
     role.name = faker.person.jobTitle();
     role.type = faker.helpers.arrayElement([RoleType.GLOBAL, RoleType.TENANT]);
     return {
