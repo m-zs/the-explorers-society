@@ -5,6 +5,7 @@ import { PasswordService } from '@core/services/password/password.service';
 import { AppRole } from '@modules/auth/enums/app-role.enum';
 import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
+import { TenantsService } from '@modules/tenants/tenants.service';
 import { RoleType } from '@modules/users/role.enum';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -93,12 +94,17 @@ describe('UsersService', () => {
     hashPassword: jest.fn().mockResolvedValue('hashed-password'),
   };
 
+  const mockTenantsService = {
+    getTenantById: jest.fn().mockResolvedValue(new TenantModel()),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         { provide: UserRepository, useValue: mockUserRepository },
         { provide: PasswordService, useValue: mockPasswordService },
+        { provide: TenantsService, useValue: mockTenantsService },
         UsersService,
       ],
     }).compile();
