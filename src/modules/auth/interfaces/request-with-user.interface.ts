@@ -1,13 +1,5 @@
 import { Request } from 'express';
 
-import { AppRole } from '../enums/app-role.enum';
+import { AuthUser } from './auth-user.interface';
 
-export interface RequestWithUser extends Request {
-  user: {
-    sub: string;
-    email: string;
-    tenantRoles?: AppRole[];
-    roles?: AppRole[];
-  };
-  tenantId: number;
-}
+export type RequestWithUser = Request & AuthUser;

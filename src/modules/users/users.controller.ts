@@ -2,10 +2,10 @@ import {
   Controller,
   Get,
   Post,
-  Param,
   Body,
   Delete,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,6 +15,11 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 
+import { AppRole } from '@modules/auth/enums/app-role.enum';
+import { AuthGuard } from '@modules/auth/guards/auth.guard';
+
+import { CheckUserAccess } from './decorators/check-user-access.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -48,6 +53,7 @@ export class UsersController {
     description: 'Return all users.',
     type: [UserResponseDto],
   })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
   async findAll(): Promise<UserResponseDto[]> {
     return await this.usersService.findAll();
   }
@@ -61,7 +67,10 @@ export class UsersController {
     type: UserResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async findOne(@Param('id') id: number): Promise<UserResponseDto | undefined> {
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
+  async findOne(
+    @CheckUserAccess('id') id: number,
+  ): Promise<UserResponseDto | undefined> {
     return await this.usersService.findOne(id);
   }
 
@@ -75,11 +84,31 @@ export class UsersController {
     type: UserResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
   async update(
-    @Param('id') id: number,
+    @CheckUserAccess('id') id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto | undefined> {
     return await this.usersService.update(id, updateUserDto);
+  }
+
+  @Put(':id/password')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The password has been successfully changed.',
+    type: UserResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid current password.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
+  async changePassword(
+    @CheckUserAccess('id') id: number,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<UserResponseDto | undefined> {
+    return await this.usersService.changePassword(id, changePasswordDto);
   }
 
   @Delete(':id')
@@ -91,7 +120,8 @@ export class UsersController {
     type: 'number',
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async remove(@Param('id') id: number): Promise<number> {
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
+  async remove(@CheckUserAccess('id') id: number): Promise<number> {
     return await this.usersService.remove(id);
   }
 
@@ -104,8 +134,9 @@ export class UsersController {
     type: UserWithTenantsDto,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
   async getUserWithTenants(
-    @Param('id') id: number,
+    @CheckUserAccess('id') id: number,
   ): Promise<UserWithTenantsDto | undefined> {
     return await this.usersService.getUserWithTenants(id);
   }
@@ -119,8 +150,9 @@ export class UsersController {
     type: UserWithRolesDto,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
   async getUserWithRoles(
-    @Param('id') id: number,
+    @CheckUserAccess('id') id: number,
   ): Promise<UserWithRolesDto | undefined> {
     return await this.usersService.getUserWithRoles(id);
   }
@@ -134,8 +166,9 @@ export class UsersController {
     type: UserWithTenantsAndRolesDto,
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  @UseGuards(AuthGuard([AppRole.ADMIN, AppRole.SUPPORT, AppRole.USER]))
   async getUserWithTenantsAndRoles(
-    @Param('id') id: number,
+    @CheckUserAccess('id') id: number,
   ): Promise<UserWithTenantsAndRolesDto | undefined> {
     return await this.usersService.getUserWithTenantsAndRoles(id);
   }
