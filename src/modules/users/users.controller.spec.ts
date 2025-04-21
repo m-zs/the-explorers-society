@@ -1,7 +1,10 @@
 import { faker } from '@faker-js/faker';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { RoleCacheService } from '@core/services/role-cache/role-cache.service';
 import { AppRole } from '@modules/auth/enums/app-role.enum';
+import { AuthGuard } from '@modules/auth/guards/auth.guard';
 import { RoleModel } from '@modules/roles/models/role.model';
 import { TenantModel } from '@modules/tenants/models/tenant.model';
 import { RoleType } from '@modules/users/role.enum';
@@ -66,6 +69,18 @@ const generateMockUserWithTenantsAndRoles = (id?: number) => {
   return { ...user, tenants, roles } as UserWithTenantsAndRoles;
 };
 
+const mockAuthGuard = {
+  canActivate: jest.fn().mockReturnValue(true),
+};
+
+const mockJwtService = {
+  verifyAsync: jest.fn().mockResolvedValue({ sub: '1' }),
+};
+
+const mockRoleCacheService = {
+  getUserCachedRoles: jest.fn().mockResolvedValue({ roles: [AppRole.USER] }),
+};
+
 describe('UsersController', () => {
   let usersController: UsersController;
   let usersService: UsersService;
@@ -87,14 +102,22 @@ describe('UsersController', () => {
     getUserWithTenantsAndRoles: jest
       .fn()
       .mockResolvedValue(mockUserWithTenantsAndRoles),
+    changePassword: jest.fn().mockResolvedValue(mockUser),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UsersService, useValue: mockUsersService }],
-    }).compile();
+      providers: [
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: RoleCacheService, useValue: mockRoleCacheService },
+      ],
+    })
+      .overrideGuard(AuthGuard)
+      .useValue(mockAuthGuard)
+      .compile();
 
     usersController = module.get<UsersController>(UsersController);
     usersService = module.get<UsersService>(UsersService);
@@ -122,6 +145,15 @@ describe('UsersController', () => {
       expect(result).toEqual(mockUsers);
       expect(usersService.findAll).toHaveBeenCalled();
     });
+
+    it('should handle empty results', async () => {
+      mockUsersService.findAll.mockResolvedValueOnce([]);
+
+      const result = await usersController.findAll();
+
+      expect(result).toEqual([]);
+      expect(usersService.findAll).toHaveBeenCalled();
+    });
   });
 
   describe('findOne', () => {
@@ -133,6 +165,15 @@ describe('UsersController', () => {
 
       const result = await usersController.findOne(id);
       expect(result).toEqual(mockedUser);
+      expect(usersService.findOne).toHaveBeenCalledWith(id);
+    });
+
+    it('should handle user not found', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+      mockUsersService.findOne.mockResolvedValueOnce(undefined);
+
+      const result = await usersController.findOne(id);
+      expect(result).toBeUndefined();
       expect(usersService.findOne).toHaveBeenCalledWith(id);
     });
   });
@@ -178,6 +219,15 @@ describe('UsersController', () => {
       expect(result).toEqual(mockUserWithTenants);
       expect(usersService.getUserWithTenants).toHaveBeenCalledWith(id);
     });
+
+    it('should handle user not found with tenants', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+      mockUsersService.getUserWithTenants.mockResolvedValueOnce(undefined);
+
+      const result = await usersController.getUserWithTenants(id);
+      expect(result).toBeUndefined();
+      expect(usersService.getUserWithTenants).toHaveBeenCalledWith(id);
+    });
   });
 
   describe('getUserWithRoles', () => {
@@ -192,6 +242,15 @@ describe('UsersController', () => {
       expect(result).toEqual(mockUserWithRoles);
       expect(usersService.getUserWithRoles).toHaveBeenCalledWith(id);
     });
+
+    it('should handle user not found with roles', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+      mockUsersService.getUserWithRoles.mockResolvedValueOnce(undefined);
+
+      const result = await usersController.getUserWithRoles(id);
+      expect(result).toBeUndefined();
+      expect(usersService.getUserWithRoles).toHaveBeenCalledWith(id);
+    });
   });
 
   describe('getUserWithTenantsAndRoles', () => {
@@ -204,6 +263,17 @@ describe('UsersController', () => {
 
       const result = await usersController.getUserWithTenantsAndRoles(id);
       expect(result).toEqual(mockUserWithTenantsAndRoles);
+      expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(id);
+    });
+
+    it('should handle user not found with tenants and roles', async () => {
+      const id = faker.number.int({ min: 1, max: 1000 });
+      mockUsersService.getUserWithTenantsAndRoles.mockResolvedValueOnce(
+        undefined,
+      );
+
+      const result = await usersController.getUserWithTenantsAndRoles(id);
+      expect(result).toBeUndefined();
       expect(usersService.getUserWithTenantsAndRoles).toHaveBeenCalledWith(id);
     });
   });

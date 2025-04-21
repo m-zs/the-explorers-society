@@ -4,6 +4,7 @@ import { ModelClass } from 'objection';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { UserWithPasswordDto } from './dto/user-with-password.dto';
 import { UserWithRolesDto } from './dto/user-with-roles.dto';
 import { UserWithTenantsAndRolesDto } from './dto/user-with-tenants-and-roles.dto';
 import { UserWithTenantsDto } from './dto/user-with-tenants.dto';
@@ -38,6 +39,12 @@ export class UserRepository {
       .select('id', 'name', 'email', 'tenantId');
   }
 
+  async getUserByIdWithPassword(
+    id: number,
+  ): Promise<UserWithPasswordDto | undefined> {
+    return this.modelClass.query().findById(id).select('id', 'password');
+  }
+
   async updateUser(
     id: number,
     data: UpdateUserDto,
@@ -45,6 +52,16 @@ export class UserRepository {
     return this.modelClass
       .query()
       .patchAndFetchById(id, data)
+      .select('id', 'name', 'email');
+  }
+
+  async updateUserPassword(
+    id: number,
+    password: string,
+  ): Promise<UserResponseDto | undefined> {
+    return this.modelClass
+      .query()
+      .patchAndFetchById(id, { password })
       .select('id', 'name', 'email');
   }
 

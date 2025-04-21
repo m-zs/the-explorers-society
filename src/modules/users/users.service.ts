@@ -7,6 +7,7 @@ import {
 import { PasswordService } from '@core/services/password/password.service';
 import { TenantsService } from '@modules/tenants/tenants.service';
 
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -62,29 +63,38 @@ export class UsersService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto | undefined> {
-    if (updateUserDto.tenantId) {
-      try {
-        await this.tenantsService.findOne(updateUserDto.tenantId);
-      } catch {
-        throw new BadRequestException('Tenant does not exist');
-      }
-    }
-
-    let password = updateUserDto.password;
-    if (password) {
-      password = await this.passwordService.hashPassword(password);
-    }
-
-    const user = await this.userRepository.updateUser(id, {
-      ...updateUserDto,
-      password,
-    });
+    const user = await this.userRepository.updateUser(id, updateUserDto);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     return user;
+  }
+
+  async changePassword(
+    id: number,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<UserResponseDto | undefined> {
+    const user = await this.userRepository.getUserByIdWithPassword(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    const isValidPassword = await this.passwordService.comparePassword(
+      changePasswordDto.password,
+      user.password,
+    );
+
+    if (!isValidPassword) {
+      throw new BadRequestException('Invalid current password');
+    }
+
+    const hashedPassword = await this.passwordService.hashPassword(
+      changePasswordDto.newPassword,
+    );
+
+    return await this.userRepository.updateUserPassword(id, hashedPassword);
   }
 
   async remove(id: number): Promise<number> {
