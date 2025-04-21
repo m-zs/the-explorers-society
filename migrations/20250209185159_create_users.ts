@@ -6,6 +6,13 @@ export async function up(knex: Knex): Promise<void> {
     table.string('name').notNullable();
     table.string('email').unique().notNullable();
     table.string('password').notNullable();
+    table
+      .integer('tenant_id')
+      .references('id')
+      .inTable('tenants')
+      .nullable()
+      .defaultTo(null)
+      .onDelete('SET NULL');
     table.timestamps(true, true);
   });
 }

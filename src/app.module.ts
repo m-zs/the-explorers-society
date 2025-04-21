@@ -14,13 +14,14 @@ import { UniqueViolationExceptionFilter } from '@core/filters/unique-violation-e
 import { LogService } from '@core/logging/log.service';
 import { RedisModule } from '@core/redis/redis.module';
 import { PasswordService } from '@core/services/password/password.service';
+import { RoleCacheModule } from '@core/services/role-cache/role-cache.module';
 import { RoleCacheProcessor } from '@core/services/role-cache/role-cache.processor';
 import { exceptionFactory } from '@core/validation/exception.factory';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { env } from '../env';
-import { TenantMiddleware } from './core/middleware/tenant.middleware';
+//import { TenantMiddleware } from './core/middleware/tenant.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -50,6 +51,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     RolesModule,
     AuthModule,
+    RoleCacheModule,
   ],
   controllers: [AppController],
   providers: [
@@ -72,6 +74,11 @@ import { UsersModule } from './modules/users/users.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cookieParser(), TenantMiddleware).forRoutes('*');
+    consumer
+      .apply(
+        cookieParser(),
+        // TenantMiddleware
+      )
+      .forRoutes('*');
   }
 }

@@ -78,7 +78,7 @@ export class AuthService {
     // Cache user roles
     await this.roleCacheService.cacheUserRolesForAuthentication(
       userId,
-      userWithRoles.roles,
+      userWithRoles.roles ?? [],
     );
 
     const [accessToken, refreshToken] = await Promise.all([

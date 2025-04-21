@@ -1,15 +1,13 @@
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { RedisModule } from '@core/redis/redis.module';
 
 import { RoleCacheProcessor } from './role-cache.processor';
 import { RoleCacheService } from './role-cache.service';
 
+@Global()
 @Module({
   imports: [
-    RedisModule,
     BullModule.registerQueueAsync({
       name: 'role-cache-invalidation',
       imports: [ConfigModule],
@@ -33,6 +31,6 @@ import { RoleCacheService } from './role-cache.service';
     }),
   ],
   providers: [RoleCacheService, RoleCacheProcessor],
-  exports: [RoleCacheService],
+  exports: [RoleCacheService, RoleCacheProcessor],
 })
 export class RoleCacheModule {}

@@ -28,6 +28,7 @@ export class UsersSeedCommand extends CommandRunner {
           name: faker.person.fullName(),
           email: faker.internet.email(),
           password: faker.internet.password(),
+          tenantId: null,
         });
       }),
     );

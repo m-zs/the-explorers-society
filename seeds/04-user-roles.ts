@@ -15,7 +15,6 @@ import { UserModel } from '@modules/users/models/user.model';
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('tenant_roles').del();
-  await knex('tenant_users').del();
 
   const passwordService = new PasswordService(new ConfigService());
 
@@ -40,27 +39,22 @@ export async function seed(knex: Knex): Promise<void> {
       {
         ...testTenantAdmin,
         password: await passwordService.hashPassword(testTenantAdmin.password),
+        tenant_id: testTenant.id,
       },
       {
         ...testTenantSupport,
         password: await passwordService.hashPassword(
           testTenantSupport.password,
         ),
+        tenant_id: testTenant.id,
       },
       {
         ...testTenantUser,
         password: await passwordService.hashPassword(testTenantUser.password),
+        tenant_id: testTenant.id,
       },
     ])
     .returning('*');
-
-  // Assign users to test tenant
-  for (const user of testUsers) {
-    await knex('tenant_users').insert({
-      tenant_id: testTenant.id,
-      user_id: user.id,
-    });
-  }
 
   // Assign global USER role to all test users (with tenant_id as NULL)
   for (const user of testUsers) {
